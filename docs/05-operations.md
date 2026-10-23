@@ -34,11 +34,14 @@ mở web (đã lưu địa chỉ)  →  bấm "Chụp phiếu"  →  chụp  →
 
 1. Xuất CSV lần cuối. Tên file có ngày.
 2. Lọc cột `can_kiem_tra` khác rỗng. Mỗi dòng là một phiếu cần xem:
-   - `cau7:multi` — tô nhiều ô ở câu 7.
-   - `cau11.c:blank` — ý C câu 11 không tô.
-   - `id[3]:blank` — chữ số thứ 3 của mã sinh viên không đọc được (`?` trong CSV).
+   - `cau7:multi` — tô nhiều ô ở câu 7 (hoặc có mực nhưng không phân biệt được).
+   - `cau11C:blank` — ý C câu 11 không tô.
+   - `student_id[3]:blank` — chữ số thứ 3 của mã sinh viên không đọc được (`?` trong CSV).
+   - `exam_code[1]:blank` — chữ số thứ nhất của mã đề không đọc được.
 3. Với mỗi dòng đó, mở ảnh gốc của phiếu (xem mục dưới) và sửa trực tiếp trong Excel.
-4. Đối chiếu số dòng CSV với số phiếu thật. Thiếu là do có phiếu bị từ chối mà không chụp lại.
+4. Đối chiếu số dòng CSV với số phiếu thật. Dòng bị từ chối có `can_kiem_tra = REJECT:<lý do>`;
+   nếu đã chụp lại phiếu đó thì **bấm "xoá" dòng đỏ trong app** trước khi xuất CSV cuối, không thì
+   file có hai dòng cho cùng một phiếu.
 
 Tỉ lệ có cờ phụ thuộc bút chì và ánh sáng; thực tế nên chuẩn bị tâm thế **10–20% phiếu cần xem**.
 Nếu vượt 30%, đừng cố sửa từng dòng — kiểm tra lại ánh sáng và bút chì trước.
