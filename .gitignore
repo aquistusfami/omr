@@ -2,3 +2,15 @@ node_modules/
 dist/
 *.log
 .DS_Store
+
+# impeccable-ignore-start
+**/.impeccable/config.local.json
+**/.impeccable/hook.cache.json
+**/.impeccable/hook.pending.json
+**/.impeccable/*.png
+**/.impeccable/review/
+**/.impeccable/questions/
+**/.impeccable/live/
+**/.impeccable/mocks/
+**/.impeccable/build/
+# impeccable-ignore-end

@@ -9,6 +9,9 @@ Hai cách dùng:
   banner xanh khi đã lưu xong — nhấc phiếu ra, đặt phiếu tiếp theo. ~4 giây/phiếu.
 - **Chụp thủ công**: chụp từng phiếu như chụp ảnh thường. Dùng khi không mở được camera.
 
+Giao diện là một bảng đọc: trạng thái chiếm cả bề ngang và đổi màu cả khung ngắm, bộ đếm phiếu ở
+góc trên, có theme sáng/tối. Mọi thứ khác nằm dưới màn hình đầu. Xem [DESIGN.md](DESIGN.md).
+
 Kết quả lưu trong IndexedDB của điện thoại (kèm ảnh phiếu đã nắn phẳng để đối chiếu), xuất được
 **CSV**, **Excel (.xlsx)** và **JSON**.
 
@@ -51,7 +54,7 @@ python3 tools/make_fixtures.py --count 3
 
 ## Tiến độ
 
-Cập nhật 2026-10-23. Chi tiết và tiêu chí nghiệm thu: [docs/06-roadmap.md](docs/06-roadmap.md).
+Cập nhật 2026-10-24. Chi tiết và tiêu chí nghiệm thu: [docs/06-roadmap.md](docs/06-roadmap.md).
 
 | Phần | Trạng thái |
 |---|---|
@@ -61,6 +64,7 @@ Cập nhật 2026-10-23. Chi tiết và tiêu chí nghiệm thu: [docs/06-roadma
 | Chụp thủ công (input file) khi không có camera | ✅ |
 | Lưu IndexedDB: kết quả + ảnh phiếu 900 px | ✅ |
 | Xuất CSV / Excel (.xlsx) / JSON | ✅ |
+| Thiết kế lại giao diện (máy đo, 2 theme, dải trạng thái) | ✅ code, **chưa xem trên màn hình thật** |
 | CI: type check, test, build, template, mở file xlsx | ✅ |
 | Deploy GitHub Pages (https cho camera) | 🟠 chờ bật Pages trong Settings |
 | **M1 — đo trên 50 phiếu thật** | 🔴 **việc tiếp theo** |

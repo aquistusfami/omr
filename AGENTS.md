@@ -18,7 +18,8 @@ Phiếu mẫu: `fixtures/blank-form.png` (ảnh phẳng của phiếu trống). 
 ## Trạng thái (2026-10-23)
 
 Đã chạy được: tách template, dò dấu góc + homography, đọc ô, quét tự động, IndexedDB, xuất
-CSV/XLSX/JSON, CI trên GitHub Actions.
+CSV/XLSX/JSON, CI trên GitHub Actions. Giao diện đã thiết kế lại (một màn hình, hai theme) nhưng
+**chưa được nhìn trên trình duyệt nào** — máy phát triển không có trình duyệt.
 
 **Chưa từng chạy trên điện thoại thật.** Toàn bộ phần camera (quyền, autoplay, https tự ký, độ
 trễ) mới chỉ được kiểm tra bằng type check. Đó là việc đầu tiên trước M1.
@@ -28,6 +29,15 @@ trong Node ở 1400 px; trên điện thoại dự kiến vài trăm ms.
 Chưa có: sửa tay trong app, nhập đáp án + tính điểm, PWA offline. Chống trùng mới ở mức đánh dấu
 cột `trung`, chưa chặn.
 Xem `docs/06-roadmap.md`.
+
+## Quy tắc làm việc
+
+- Sau **mỗi lần làm việc**, cập nhật `README.md` (bảng Tiến độ, Việc tiếp theo) và tài liệu liên
+  quan trong `docs/` **trong cùng commit** với code. Việc còn dở thì ghi rõ là còn dở.
+- Giao diện: đọc `DESIGN.md` trước khi sửa `web/src/styles.css`; token nằm ở đó và trong file CSS.
+  Bố cục là "máy đo": trạng thái đọc chiếm màn hình, không thêm card, không icon emoji, không
+  gradient chữ. Bộ đọc tự động `impeccable` đã cài trong `.opencode/`.
+- Sản phẩm/danh tính: `PRODUCT.md` (do `impeccable` ghi). Đừng thêm tuyên bố chưa kiểm chứng.
 
 ## Lệnh
 

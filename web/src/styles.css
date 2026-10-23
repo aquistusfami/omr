@@ -1,89 +1,474 @@
+/* Instrument panel: the reading owns the screen, everything else is a thin rail. */
+
 :root {
-  --bg: #f6f7f9;
-  --card: #fff;
-  --ink: #14161a;
-  --muted: #6b7280;
-  --line: #e3e6ea;
-  --accent: #1f6feb;
-  --ok: #0f8a3c;
-  --warn: #b45309;
-  --bad: #b91c1c;
   color-scheme: light;
+  --ground: #eef1ec;
+  --surface: #ffffff;
+  --ink: #10150f;
+  --ink-2: #4a5246;
+  --line: #d5dbd0;
+  --accent: #16574a;
+
+  --state: transparent;
+  --state-wash: transparent;
+  --state-ink: var(--ink-2);
+  --ok: #0b6b36;
+  --ok-wash: #e3f2e8;
+  --ok-ink: #075429;
+  --bad: #a82a1d;
+  --bad-wash: #fbe8e5;
+  --bad-ink: #7e1f15;
+
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --radius: 14px;
 }
-* { box-sizing: border-box; }
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ground: #0e1310;
+  --surface: #161c17;
+  --ink: #e9eee6;
+  --ink-2: #a6afa2;
+  --line: #2a3229;
+  --accent: #7cd3bc;
+
+  --ok: #63d08d;
+  --ok-wash: #122a1b;
+  --ok-ink: #a7ecbf;
+  --bad: #ff9e90;
+  --bad-wash: #2b1613;
+  --bad-ink: #ffc4ba;
+}
+
+body[data-state="ok"] {
+  --state: var(--ok);
+  --state-wash: var(--ok-wash);
+  --state-ink: var(--ok-ink);
+}
+body[data-state="bad"] {
+  --state: var(--bad);
+  --state-wash: var(--bad-wash);
+  --state-ink: var(--bad-ink);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
 body {
-  margin: 0 auto;
-  max-width: 780px;
-  padding: 12px 16px 64px;
-  background: var(--bg);
-  color: var(--ink);
-  font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+  height: 100%;
 }
-header h1 { font-size: 20px; margin: 8px 0 2px; }
-.muted { color: var(--muted); font-size: 13px; }
 
-.modes { display: flex; gap: 8px; margin: 12px 0 8px; }
-.actions { display: flex; gap: 8px; margin: 12px 0 4px; flex-wrap: wrap; }
-button, .primary {
-  font: inherit;
+body {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  background: var(--ground);
+  color: var(--ink);
+  font: 15px/1.45 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-variant-numeric: tabular-nums;
+  -webkit-text-size-adjust: 100%;
+  transition: background-color 180ms var(--ease);
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--ground);
+}
+
+* {
+  scrollbar-color: var(--line) transparent;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ------------------------------------------------------------------ rail */
+
+.rail {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  height: 56px;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--line);
+  flex: none;
+}
+
+.brand {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.rail-end {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.count {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  color: var(--ink-2);
+  font-size: 12px;
+}
+
+.count b {
+  color: var(--ink);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.icon-btn {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
   border: 1px solid var(--line);
-  background: var(--card);
-  color: var(--ink);
   border-radius: 10px;
-  padding: 10px 16px;
+  background: none;
+  color: var(--ink-2);
   cursor: pointer;
+  transition:
+    border-color 140ms var(--ease),
+    color 140ms var(--ease);
 }
-.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
-button.active { border-color: var(--accent); color: var(--accent); font-weight: 600; }
-button.ghost { background: transparent; color: var(--muted); }
+.icon-btn:hover {
+  border-color: var(--ink-2);
+  color: var(--ink);
+}
+/* the button shows the theme it switches to, not the current one */
+:root[data-theme="dark"] .icon-btn .i-moon,
+:root[data-theme="light"] .icon-btn .i-sun {
+  display: none;
+}
 
-/* camera stage */
-.stage { position: relative; margin: 8px 0; border-radius: 12px; overflow: hidden; background: #000; }
-.stage video { display: block; width: 100%; height: auto; max-height: 62vh; object-fit: contain; }
+/* ---------------------------------------------------------------- screen */
+
+.screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 10px 14px calc(14px + env(safe-area-inset-bottom));
+}
+
+/* camera: the sensor. dark ground even in light theme, so the feed reads as a viewfinder */
+.stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 200px;
+  aspect-ratio: 4 / 3;
+  max-height: 58dvh;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #0a0d0a;
+}
+
+.stage video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.stage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 3px var(--state);
+  pointer-events: none;
+  transition: box-shadow 180ms var(--ease);
+}
+
 .guide {
   position: absolute;
-  inset: 8% 10% 8% 10%;
-  border: 2px dashed rgba(255, 255, 255, 0.85);
-  border-radius: 10px;
+  /* shape of the printed sheet (960 x 891) inside a 4:3 frame */
+  inset: 5% 18%;
+  border: 1px dashed color-mix(in srgb, #ffffff 70%, transparent);
+  border-radius: 6px;
   pointer-events: none;
 }
 
-/* big status banner: the whole point of the mounted-phone workflow */
+/* manual picker replaces the sensor in manual mode */
+.picker {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 240px;
+  padding: 24px;
+  border: 1px dashed var(--line);
+  border-radius: 16px;
+}
+.picker-hint {
+  margin: 0;
+  font-size: 15px;
+  color: var(--ink);
+}
+.picker-note {
+  margin: 0;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+/* --------------------------------------------------------------- readout */
+
+.readout {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
 .banner {
-  margin: 10px 0;
-  padding: 14px 16px;
-  border-radius: 12px;
-  font-size: 18px;
-  font-weight: 600;
+  margin: 0;
+  display: grid;
+  place-items: center;
+  min-height: 84px;
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  background: var(--state-wash);
+  color: var(--state-ink);
+  font-size: 25px;
+  font-weight: 650;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
   text-align: center;
-  border: 1px solid var(--line);
-  background: var(--card);
-  transition: background 120ms, color 120ms;
+  text-wrap: balance;
+  transition:
+    background-color 180ms var(--ease),
+    color 180ms var(--ease);
 }
-.banner.wait { color: var(--muted); }
-.banner.ok { background: #e8f7ee; border-color: #b9e3c8; color: var(--ok); }
-.banner.bad { background: #fdecec; border-color: #f3c2c2; color: var(--bad); }
 
-.status { min-height: 20px; color: var(--muted); font-size: 13px; margin: 4px 0; }
-
-.list { display: grid; gap: 8px; margin-top: 8px; }
-.row {
-  position: relative;
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 10px 12px 12px;
-}
-.row.rejected { border-color: #f3c2c2; background: #fff7f7; }
-.row-head { display: flex; gap: 10px; align-items: baseline; }
-.row-head strong { font-size: 16px; letter-spacing: 0.02em; }
-.answers {
-  font: 13px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace;
-  color: #333a45;
-  margin-top: 4px;
+.last {
+  margin: 0;
+  min-height: 18px;
+  font-size: 12.5px;
+  color: var(--ink-2);
+  text-align: center;
   overflow-wrap: anywhere;
 }
-.flags { color: var(--warn); font-size: 12px; margin-top: 4px; }
-.dup { color: var(--bad); font-size: 12px; font-weight: 600; }
-.row.rejected .answers { color: var(--bad); font-family: inherit; }
-.remove { position: absolute; top: 6px; right: 6px; padding: 4px 8px; font-size: 12px; }
+
+/* -------------------------------------------------------------- controls */
+
+.controls {
+  flex: none;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 52px;
+  padding: 0 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color 140ms var(--ease),
+    border-color 140ms var(--ease);
+}
+.btn:hover {
+  border-color: var(--ink-2);
+}
+
+.btn.primary {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--ground);
+}
+.btn.primary:hover {
+  background: color-mix(in srgb, var(--ink) 88%, var(--ground));
+}
+
+.btn[aria-pressed="true"]::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* --------------------------------------------------------------- utility */
+
+.utility {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 2px 2px 0;
+}
+
+.utility button {
+  padding: 8px 0;
+  border: 0;
+  background: none;
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 13px;
+  text-decoration: underline;
+  text-decoration-color: var(--line);
+  text-underline-offset: 4px;
+  cursor: pointer;
+}
+.utility button:hover {
+  color: var(--ink);
+  text-decoration-color: currentColor;
+}
+.utility .danger {
+  margin-left: auto;
+}
+.utility .danger:hover {
+  color: var(--bad);
+}
+
+/* --------------------------------------------------------------- results */
+
+.results {
+  padding-top: 6px;
+}
+
+.status {
+  margin: 0 0 4px;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.list {
+  border-top: 1px solid var(--line);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.row-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+.row-head strong {
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+}
+.row-head .muted,
+.row-head time {
+  font-size: 11.5px;
+  color: var(--ink-2);
+}
+
+.answers {
+  grid-column: 1 / -1;
+  font: 12px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+
+.flags {
+  grid-column: 1 / -1;
+  font-size: 12px;
+  color: var(--bad);
+}
+
+.dup {
+  padding: 1px 6px;
+  border: 1px solid var(--bad);
+  border-radius: 999px;
+  color: var(--bad);
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+.row.rejected .answers {
+  font-family: inherit;
+  color: var(--bad);
+}
+
+.ghost.remove {
+  align-self: start;
+  padding: 4px 6px;
+  border: 0;
+  background: none;
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 12px;
+  text-decoration: underline;
+  text-decoration-color: var(--line);
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.ghost.remove:hover {
+  color: var(--bad);
+  text-decoration-color: currentColor;
+}
+
+.template {
+  margin: 14px 0 0;
+  font-size: 11px;
+  color: var(--ink-2);
+  opacity: 0.75;
+}
+
+/* ---------------------------------------------------------------- motion */
+
+@keyframes tick {
+  from {
+    transform: translateY(-0.35em);
+    opacity: 0;
+  }
+}
+
+.tick {
+  animation: tick 220ms var(--ease);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+@media (min-width: 720px) {
+  .banner {
+    font-size: 28px;
+  }
+}

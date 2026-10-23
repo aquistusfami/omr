@@ -13,11 +13,14 @@ const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as 
 
 const video = $<HTMLVideoElement>("video");
 const stage = $<HTMLElement>("stage");
-const fileLabel = $<HTMLLabelElement>("file-label");
+const picker = $<HTMLElement>("picker");
 const fileInput = $<HTMLInputElement>("file");
-const banner = $<HTMLDivElement>("banner");
+const banner = $<HTMLParagraphElement>("banner");
+const lastEl = $<HTMLParagraphElement>("last");
 const statusEl = $<HTMLParagraphElement>("status");
 const listEl = $<HTMLElement>("list");
+const countEl = $<HTMLElement>("count");
+const themeBtn = $<HTMLButtonElement>("theme");
 
 const scanner = new Scanner();
 let stream: MediaStream | null = null;
@@ -28,6 +31,25 @@ let lastAcceptAt = 0;
 let audio: AudioContext | null = null;
 
 $("template-name").textContent = `${tmpl.name} · ${tmpl.blocks ? Object.keys(tmpl.blocks).length : 0} khối ô`;
+
+/* ------------------------------------------------------------------- theme */
+
+const THEME_COLOR = { light: "#eef1ec", dark: "#0e1310" };
+
+function applyTheme(theme: "light" | "dark"): void {
+  document.documentElement.dataset.theme = theme;
+  document
+    .querySelector('meta[name="theme-color"]')
+    ?.setAttribute("content", THEME_COLOR[theme]);
+  themeBtn.setAttribute("aria-label", theme === "dark" ? "Đổi sang nền sáng" : "Đổi sang nền tối");
+}
+
+applyTheme(document.documentElement.dataset.theme === "dark" ? "dark" : "light");
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+  localStorage.setItem("omr:theme", next);
+  applyTheme(next);
+});
 
 /* ---------------------------------------------------------------- feedback */
 
@@ -47,9 +69,18 @@ function beep(ok: boolean): void {
   navigator.vibrate?.(ok ? 60 : [60, 80, 60]);
 }
 
-function setBanner(kind: "wait" | "ok" | "bad", text: string): void {
-  banner.className = `banner ${kind}`;
+function setBanner(kind: "wait" | "ok" | "bad", text: string, detail?: string): void {
   banner.textContent = text;
+  if (detail !== undefined) lastEl.textContent = detail;
+  document.body.dataset.state = kind;
+}
+
+function details(saved: store.SheetRecord): string {
+  return (
+    `${saved.studentId} · đề ${saved.examCode}` +
+    (saved.flags.length ? ` · ${saved.flags.length} ô cần xem` : "") +
+    (saved.duplicate ? " · trùng mã SV" : "")
+  );
 }
 
 /* ------------------------------------------------------------------ record */
@@ -91,18 +122,15 @@ async function tick(): Promise<void> {
       if (action.type === "accept") {
         lastAcceptAt = performance.now();
         const saved = await save(action.result);
-        const flagCount = saved.flags.length;
         beep(true);
-        setBanner(
-          "ok",
-          `Đã nhận · ${saved.studentId} · đề ${saved.examCode}` +
-            (flagCount ? ` · ${flagCount} ô cần xem` : "") +
-            (saved.duplicate ? " · TRÙNG MÃ SV" : ""),
-        );
+        setBanner("ok", "Đã nhận — nhấc phiếu ra", details(saved));
         await render();
       } else if (action.type === "reject") {
         beep(false);
-        setBanner("bad", action.reason === "quality" ? "Ảnh mờ hoặc lệch — nhấc ra, đặt lại" : "Không thấy đủ dấu góc — đặt lại phiếu");
+        setBanner(
+          "bad",
+          action.reason === "quality" ? "Mờ hoặc lệch — đặt lại" : "Thiếu dấu góc — đặt lại",
+        );
       } else {
         const phase = scanner.phase;
         // keep the accepted-sheet details on screen for a moment
@@ -136,12 +164,13 @@ async function startAuto(): Promise<void> {
     return;
   }
   stage.hidden = false;
-  fileLabel.hidden = true;
+  picker.hidden = true;
+  stage.style.aspectRatio = `${video.videoWidth} / ${video.videoHeight}`;
   running = true;
   generation++;
-  $("auto").classList.add("active");
-  $("manual").classList.remove("active");
-  setBanner("wait", "Đưa phiếu vào khung");
+  $("auto").setAttribute("aria-pressed", "true");
+  $("manual").setAttribute("aria-pressed", "false");
+  setBanner("wait", "Đưa phiếu vào khung", "");
   void tick();
 }
 
@@ -151,7 +180,7 @@ function stopAuto(): void {
   stopCamera(stream);
   stream = null;
   stage.hidden = true;
-  $("auto").classList.remove("active");
+  $("auto").setAttribute("aria-pressed", "false");
 }
 
 /* ------------------------------------------------------------ manual input */
@@ -173,14 +202,8 @@ async function handleFile(file: File): Promise<void> {
   });
   const saved = await save(result);
   beep(result.ok);
-  setBanner(
-    result.ok ? "ok" : "bad",
-    result.ok
-      ? `Đã nhận · ${saved.studentId} · đề ${saved.examCode}` +
-          (saved.flags.length ? ` · ${saved.flags.length} ô cần xem` : "") +
-          (saved.duplicate ? " · TRÙNG MÃ SV" : "")
-      : `Không đọc được phiếu (${result.reason})`,
-  );
+  if (result.ok) setBanner("ok", "Đã nhận — nhấc phiếu ra", details(saved));
+  else setBanner("bad", "Không đọc được phiếu", `lý do: ${result.reason}`);
   await render();
 }
 
@@ -197,6 +220,20 @@ async function render(): Promise<void> {
     `${rows.length} phiếu · ${flagged} có ô cần xem · ${bad} bị từ chối` +
     (dup ? ` · ${dup} trùng mã SV` : "");
 
+  const total = String(rows.length);
+  if (countEl.textContent !== total) {
+    countEl.textContent = total;
+    if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      countEl.animate(
+        [
+          { transform: "translateY(-0.35em)", opacity: 0 },
+          { transform: "none", opacity: 1 },
+        ],
+        { duration: 220, easing: "cubic-bezier(0.16,1,0.3,1)" },
+      );
+    }
+  }
+
   listEl.replaceChildren(
     ...recentRows.map((r) => {
       const row = document.createElement("article");
@@ -206,7 +243,7 @@ async function render(): Promise<void> {
           <strong>${r.studentId || "?"}</strong>
           <span class="muted">đề ${r.examCode || "?"}</span>
           ${r.duplicate ? `<span class="dup">trùng</span>` : ""}
-          <span class="muted">${new Date(r.at).toLocaleTimeString("vi-VN")}</span>
+          <time class="muted">${new Date(r.at).toLocaleTimeString("vi-VN")}</time>
         </div>
         <div class="answers">${
           r.ok
@@ -249,9 +286,10 @@ async function exportAs(kind: "csv" | "xlsx" | "json"): Promise<void> {
 $("auto").addEventListener("click", () => void startAuto());
 $("manual").addEventListener("click", () => {
   stopAuto();
-  $("manual").classList.add("active");
-  fileLabel.hidden = false;
-  setBanner("wait", "Chọn hoặc chụp ảnh phiếu");
+  $("manual").setAttribute("aria-pressed", "true");
+  stage.hidden = true;
+  picker.hidden = false;
+  setBanner("wait", "Chọn ảnh phiếu để chấm", "");
 });
 fileInput.addEventListener("change", () => {
   const file = fileInput.files?.[0];

@@ -2,43 +2,75 @@
 <html lang="vi">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>Chấm phiếu trắc nghiệm</title>
+    <meta name="theme-color" content="#eef1ec" />
+    <script>
+      // theme before first paint, otherwise the page flashes white in a dark room
+      try {
+        const saved = localStorage.getItem("omr:theme");
+        const dark = matchMedia("(prefers-color-scheme: dark)").matches;
+        document.documentElement.dataset.theme = saved || (dark ? "dark" : "light");
+      } catch {}
+    </script>
     <link rel="stylesheet" href="/src/styles.css" />
   </head>
-  <body>
-    <header>
-      <h1>Chấm phiếu trắc nghiệm</h1>
-      <p id="template-name" class="muted"></p>
+  <body data-state="wait">
+    <header class="rail">
+      <h1 class="brand">Chấm phiếu</h1>
+      <div class="rail-end">
+        <span class="count"><b id="count">0</b><span class="unit">phiếu</span></span>
+        <button id="theme" class="icon-btn" type="button" aria-label="Đổi nền sáng/tối">
+          <svg class="i-sun" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"
+               fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+            <circle cx="12" cy="12" r="4.2" />
+            <path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6" />
+          </svg>
+          <svg class="i-moon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"
+               fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 13.5A8.2 8.2 0 0 1 10.5 4a8.5 8.5 0 1 0 9.5 9.5Z" />
+          </svg>
+        </button>
+      </div>
     </header>
 
-    <main>
-      <section class="modes">
-        <button id="auto" type="button" class="primary">Quét tự động</button>
-        <button id="manual" type="button">Chụp thủ công</button>
-      </section>
-
+    <main class="screen">
       <section id="stage" class="stage" hidden>
-        <video id="video" playsinline muted></video>
-        <div class="guide"></div>
+        <video id="video" playsinline muted aria-hidden="true"></video>
+        <div class="guide" aria-hidden="true"></div>
       </section>
 
-      <div id="banner" class="banner wait">Sẵn sàng</div>
-
-      <section class="actions">
-        <label id="file-label" class="primary" hidden>
+      <section id="picker" class="picker" hidden>
+        <p class="picker-hint">Chụp hoặc chọn ảnh phiếu đã tô</p>
+        <label id="file-label" class="btn primary" for="file">
           Chụp phiếu
           <input id="file" type="file" accept="image/*" capture="environment" hidden />
         </label>
+        <p class="picker-note">Ảnh được xử lý ngay trên máy này.</p>
+      </section>
+
+      <div class="readout">
+        <p id="banner" class="banner" role="status" aria-live="polite">Đưa phiếu vào khung</p>
+        <p id="last" class="last"></p>
+      </div>
+
+      <div class="controls">
+        <button id="auto" class="btn primary" type="button" aria-pressed="false">Quét tự động</button>
+        <button id="manual" class="btn" type="button" aria-pressed="false">Chụp thủ công</button>
+      </div>
+
+      <nav class="utility" aria-label="Xuất kết quả">
         <button id="csv" type="button">CSV</button>
         <button id="xlsx" type="button">Excel</button>
         <button id="json" type="button">JSON</button>
-        <button id="clear" type="button" class="ghost">Xoá hết</button>
+        <button id="clear" type="button" class="danger">Xoá hết</button>
+      </nav>
+
+      <section class="results">
+        <p id="status" class="status" role="status"></p>
+        <div id="list" class="list"></div>
+        <p id="template-name" class="template"></p>
       </section>
-
-      <p id="status" class="status" role="status"></p>
-
-      <section id="list" class="list"></section>
     </main>
 
     <script type="module" src="/src/main.ts"></script>
