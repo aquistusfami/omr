@@ -26,6 +26,21 @@ npm run dev          # in ra địa chỉ LAN dạng https, mở bằng điện 
 Camera trình duyệt yêu cầu **https**. Chứng chỉ dev là tự ký: điện thoại cảnh báo một lần, bấm
 "Nâng cao" → "Vẫn tiếp tục". Chỉ xem giao diện bằng máy tính thì dùng `HTTP=1 npm run dev`.
 
+### Mở trên điện thoại
+
+**Cùng mạng wifi**: dùng địa chỉ `https://<ip-lan>:5173` mà `npm run dev` in ra. Chứng chỉ tự ký
+nên điện thoại cảnh báo một lần.
+
+**Không cùng mạng, hoặc dùng lâu dài**: bản build tự động đưa lên GitHub Pages —
+https://aquistusfami.github.io/omr/ (https thật, không cảnh báo chứng chỉ).
+
+Bật một lần trong repo: **Settings → Pages → Build and deployment → Source: GitHub Actions**.
+Sau đó mỗi lần push `master`, job `deploy` trong `.github/workflows/ci.yml` build và xuất bản.
+
+> Kết quả chấm nằm trong IndexedDB **của từng địa chỉ web**. Đổi từ `https://<ip-lan>:5173` sang
+> `https://aquistusfami.github.io/omr/` là thấy danh sách trống — dữ liệu cũ vẫn còn ở địa chỉ cũ.
+> Chọn một địa chỉ rồi dùng suốt buổi chấm, và xuất file trước khi đổi.
+
 Chọn ảnh có sẵn để thử nhanh:
 
 ```bash
@@ -47,6 +62,7 @@ Cập nhật 2026-10-23. Chi tiết và tiêu chí nghiệm thu: [docs/06-roadma
 | Lưu IndexedDB: kết quả + ảnh phiếu 900 px | ✅ |
 | Xuất CSV / Excel (.xlsx) / JSON | ✅ |
 | CI: type check, test, build, template, mở file xlsx | ✅ |
+| Deploy GitHub Pages (https cho camera) | 🟠 chờ bật Pages trong Settings |
 | **M1 — đo trên 50 phiếu thật** | 🔴 **việc tiếp theo** |
 | M2 — sửa ô ngay trong app | ⬜ |
 | M3 — nắn theo từng khối (phiếu cong) | ⬜ |
@@ -59,12 +75,13 @@ Con số hiện có chỉ từ **ảnh giả lập**: 30 phiếu, 1560 đơn v�
 
 ## Việc tiếp theo
 
-1. **Chạy thử trên điện thoại thật** (~5 phút): mở https, cấp quyền camera, đặt 3–5 phiếu đã tô,
+1. **Bật Pages** (Settings → Pages → Source: GitHub Actions) rồi chạy lại job `deploy` — 1 phút.
+2. **Chạy thử trên điện thoại thật** (~5 phút): mở https, cấp quyền camera, đặt 3–5 phiếu đã tô,
    kiểm tra bíp + banner xanh + nhấc phiếu ra mới nhận phiếu tiếp. Đây là phần chưa được kiểm
    chứng — máy phát triển không có trình duyệt.
-2. **M1**: chụp 50 phiếu thật kèm bảng đáp án chấm tay, đo 4 con số (ô sai, tỉ lệ từ chối, tỉ lệ
+3. **M1**: chụp 50 phiếu thật kèm bảng đáp án chấm tay, đo 4 con số (ô sai, tỉ lệ từ chối, tỉ lệ
    cờ, giây/phiếu). Không đạt thì chỉnh `classify()` theo dữ liệu thật rồi đo lại.
-3. Đạt M1 mới chấm 500 phiếu thật; sau đó mới làm M2 (sửa tay trong app) — nó là khoảng trống
+4. Đạt M1 mới chấm 500 phiếu thật; sau đó mới làm M2 (sửa tay trong app) — nó là khoảng trống
    giữa "có file Excel" và "quy trình khép kín".
 
 ## Điều kiện để chấm đúng

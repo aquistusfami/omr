@@ -40,6 +40,8 @@ cd web && npm test        # grade + state machine + xlsx
 cd web && npm run build   # tsc --noEmit + vite build
 # CI chạy đúng các lệnh trên, cộng thêm build_template.py --check và mở file .xlsx
 # bằng openpyxl: .github/workflows/ci.yml
+# Push master ⇒ job deploy xuất bản web/dist lên GitHub Pages (cần bật Pages một lần
+# trong Settings, Source: GitHub Actions). Vite dùng base "./" để chạy được ở /omr/.
 
 # công cụ python (numpy, scipy, pillow — không cần opencv)
 python3 tools/build_template.py          # tạo lại template.json + ảnh overlay
