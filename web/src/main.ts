@@ -93,7 +93,9 @@ function toRecord(r: GradeResult) {
     studentId: r.studentId,
     examCode: r.examCode,
     p1: Object.fromEntries(Object.entries(r.p1).map(([q, u]) => [q, u.value])),
-    p2: Object.fromEntries(Object.entries(r.p2).map(([q, u]) => [q, u.values.join("")])),
+    p2: Object.fromEntries(
+      Object.entries(r.p2).map(([q, u]) => [q, u.values.map((v) => v || "?").join("")]),
+    ),
     flags: r.flags,
     anchors: r.anchors,
   };
@@ -248,7 +250,7 @@ async function render(): Promise<void> {
         <div class="answers">${
           r.ok
             ? [...Object.entries(r.p1).map(([q, v]) => `${q}${v || "·"}`),
-               ...Object.entries(r.p2).map(([q, v]) => `${q}:${[...v].map((c) => c || "·").join("")}`)].join("  ")
+               ...Object.entries(r.p2).map(([q, v]) => `${q}:${[...v].map((c) => (c === "?" ? "·" : c)).join("")}`)].join("  ")
             : "Chụp lại phiếu này"
         }</div>
         ${r.ok && r.flags.length ? `<div class="flags">cần xem: ${r.flags.join(", ")}</div>` : ""}

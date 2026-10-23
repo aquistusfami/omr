@@ -60,6 +60,7 @@ Cập nhật 2026-10-24. Chi tiết và tiêu chí nghiệm thu: [docs/06-roadma
 |---|---|
 | Template từ phiếu thật, dò 4 dấu góc, nắn phối cảnh | ✅ |
 | Đọc 220 ô trả lời, cờ ô mờ / tô nhiều / ô trống | ✅ |
+| Đọc được **bản scan thật** (57 tờ, A4 dọc, giấy tối dần) | ✅ 57/57, xem bên dưới |
 | Quét tự động trên giá cố định, chống nhận trùng một phiếu | ✅ code + test, **chưa chạy trên điện thoại thật** |
 | Chụp thủ công (input file) khi không có camera | ✅ |
 | Lưu IndexedDB: kết quả + ảnh phiếu 900 px | ✅ |
@@ -67,15 +68,22 @@ Cập nhật 2026-10-24. Chi tiết và tiêu chí nghiệm thu: [docs/06-roadma
 | Thiết kế lại giao diện (máy đo, 2 theme, dải trạng thái) | ✅ code, **chưa xem trên màn hình thật** |
 | CI: type check, test, build, template, mở file xlsx | ✅ |
 | Deploy GitHub Pages (https cho camera) | 🟠 chờ bật Pages trong Settings |
-| **M1 — đo trên 50 phiếu thật** | 🔴 **việc tiếp theo** |
+| **M1 — đo độ chính xác trên 50 phiếu chấm tay** | 🔴 **việc tiếp theo** |
 | M2 — sửa ô ngay trong app | ⬜ |
 | M3 — nắn theo từng khối (phiếu cong) | ⬜ |
 | M4 — chặn trùng, xoá ảnh theo lô | 🟡 đã đánh dấu trùng, chưa chặn |
 | M5 — nhập đáp án, tính điểm, phổ điểm | ⬜ |
 | M6 — PWA offline, gộp nhiều điện thoại | ⬜ |
 
-Con số hiện có chỉ từ **ảnh giả lập**: 30 phiếu, 1560 đơn vị trả lời, 0 sai, 1 phiếu bị từ chối
-(3%), 38 ms/phiếu trong Node. Chưa có phép đo nào trên phiếu chụp thật.
+**Đã đọc được phiếu thật.** Bộ 57 tờ scan A4 (ảnh 150 dpi, 1240×1754): 57/57 nhận, dùng 15–21
+dấu góc, residual ≤ 2.7 canvas unit, 37 ms/tờ trong Node, 0 ô mã sinh viên/mã đề bị trống.
+Cờ còn lại: 158/2109 đơn vị (7.5%), trong đó 157 là `blank` — học sinh thật sự bỏ trống câu, đã
+đối chiếu ảnh. Bốn mã sinh viên đối chiếu tay (p-01, p-04, p-08, p-19) đều khớp.
+
+Ảnh giả lập vẫn dùng cho test tự động: 3 phiếu thường + 1 phiếu A4 dọc có khung dấu ngoài phiếu,
+gradient trên–dưới và nét bút chì nhạt (đúng ba thứ đã làm hỏng lần đọc thật đầu tiên).
+
+Độ chính xác đáp án A–D **chưa** đo được: cần bảng chấm tay của chính 57 tờ đó.
 
 ## Việc tiếp theo
 
@@ -83,8 +91,9 @@ Con số hiện có chỉ từ **ảnh giả lập**: 30 phiếu, 1560 đơn v�
 2. **Chạy thử trên điện thoại thật** (~5 phút): mở https, cấp quyền camera, đặt 3–5 phiếu đã tô,
    kiểm tra bíp + banner xanh + nhấc phiếu ra mới nhận phiếu tiếp. Đây là phần chưa được kiểm
    chứng — máy phát triển không có trình duyệt.
-3. **M1**: chụp 50 phiếu thật kèm bảng đáp án chấm tay, đo 4 con số (ô sai, tỉ lệ từ chối, tỉ lệ
-   cờ, giây/phiếu). Không đạt thì chỉnh `classify()` theo dữ liệu thật rồi đo lại.
+3. **M1**: chấm tay 50 trong 57 tờ đã có (hoặc chụp thêm), so từng ô, đo 4 con số (ô sai, tỉ lệ
+   từ chối, tỉ lệ cờ, giây/phiếu). Không đạt thì chỉnh ngưỡng trong `classify()` / `classifyColumn()`
+   rồi đo lại.
 4. Đạt M1 mới chấm 500 phiếu thật; sau đó mới làm M2 (sửa tay trong app) — nó là khoảng trống
    giữa "có file Excel" và "quy trình khép kín".
 

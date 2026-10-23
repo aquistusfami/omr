@@ -39,14 +39,65 @@ export function classify(candidates: { label: string; value: number }[]): Unit {
   const runnerUp = sorted[1]?.value ?? 255;
   const brightest = sorted[sorted.length - 1].value;
   const gap = runnerUp - darkest.value;
-  const hasInk = darkest.value < brightest * 0.7;
   const minGap = Math.max(20, brightest * 0.1);
 
-  if (!hasInk) return { value: "", flag: "blank", confidence: 0 };
+  // No absolute "is there ink" test: a pencil fill scans at ~80% of the paper,
+  // and so does a shadowed corner. What separates them is the contrast inside
+  // the unit, which is the gap.
   if (gap >= minGap) {
     return { value: darkest.label, flag: "ok", confidence: Math.min(1, gap / (brightest * 0.45)) };
   }
-  return { value: darkest.label, flag: "multi", confidence: 0 };
+  // several options inked: only call it multi when the dark ones are really dark
+  if (darkest.value < brightest * 0.8) {
+    return { value: darkest.label, flag: "multi", confidence: 0 };
+  }
+  return { value: "", flag: "blank", confidence: 0 };
+}
+
+/**
+ * How much darker than the paper each bubble of a digit column is.
+ *
+ * A digit unit is a column of ten bubbles running down the page, while the
+ * scanned paper fades by ~20% from top to bottom. Comparing bubbles inside the
+ * unit would pit a fill near the top against empty bubbles further down, so the
+ * paper trend is removed instead: fit a line, drop the darkest point (the mark),
+ * refit, and report the leftover residuals. Positive = darker than the trend.
+ */
+function columnDips(values: number[]): number[] {
+  const fit = (use: number[]) => {
+    const m = use.length;
+    const sx = use.reduce((a, i) => a + i, 0);
+    const sy = use.reduce((a, i) => a + values[i], 0);
+    const sxx = use.reduce((a, i) => a + i * i, 0);
+    const sxy = use.reduce((a, i) => a + i * values[i], 0);
+    const b = (m * sxy - sx * sy) / (m * sxx - sx * sx);
+    const a = (sy - b * sx) / m;
+    return (i: number) => a + b * i;
+  };
+  const all = values.map((_, i) => i);
+  const first = fit(all);
+  let worst = 0;
+  for (let i = 1; i < values.length; i++)
+    if (first(i) - values[i] > first(worst) - values[worst]) worst = i;
+  const line = fit(all.filter((i) => i !== worst));
+  return values.map((v, i) => line(i) - v);
+}
+
+/** Digit column: one clearly darkest bubble, or nothing, or two marks. */
+function classifyColumn(candidates: { label: string; value: number }[]): Unit {
+  if (candidates.length < 3) return classify(candidates);
+  const dips = columnDips(candidates.map((c) => c.value));
+  const order = dips.map((d, i) => ({ i, d })).sort((a, b) => b.d - a.d);
+  const best = order[0];
+  const runnerUp = order[1]?.d ?? 0;
+  // measured on 684 real columns: fills >= 26, everything else <= 11
+  if (best.d < 20) return { value: "", flag: "blank", confidence: 0 };
+  if (runnerUp >= 12) return { value: candidates[best.i].label, flag: "multi", confidence: 0 };
+  return {
+    value: candidates[best.i].label,
+    flag: "ok",
+    confidence: Math.min(1, (best.d - runnerUp) / 60),
+  };
 }
 
 function blockValues(canvas: Gray, tmpl: Template, block: string): number[][] {
@@ -119,7 +170,9 @@ export function gradeSheet(
       const rows = values[s.block];            // rows[digit][position]
       let text = "";
       for (let pos = 0; pos < s.positions; pos++) {
-        const unit = classify(rows.map((row, digit) => ({ label: s.labels[digit], value: row[pos] })));
+        const unit = classifyColumn(
+          rows.map((row, digit) => ({ label: s.labels[digit], value: row[pos] })),
+        );
         text += unit.value || "?";
         note(`${s.id}[${pos + 1}]`, unit);
       }

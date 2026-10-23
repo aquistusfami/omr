@@ -83,6 +83,9 @@ python3 tools/make_fixtures.py --count 30 --out /tmp/sheets   # để đo độ 
 
 ## Bất biến — đừng phá
 
+0. **Dữ liệu thật không vào git.** Phiếu đã tô, bản scan, ảnh chụp, file PDF từ máy scan là dữ liệu
+   cá nhân của học sinh. Để trong `/tmp/opencode` hoặc `fixtures/private/` (đã gitignore).
+
 1. **`fixtures/template.json` là file sinh ra.** Sửa `tools/build_template.py` rồi chạy lại.
    Nếu `--check` báo STALE thì template và phiếu mẫu đã lệch nhau.
 2. **Hệ toạ độ canvas**: 4 dấu cực trị của phiếu ánh xạ vào `(0,0)-(1000,0)-(1000,H)-(0,H)`.
@@ -91,8 +94,10 @@ python3 tools/make_fixtures.py --count 30 --out /tmp/sheets   # để đo độ 
 3. **Không thêm dependency** nếu <50 dòng code tự viết là đủ. Bundle hiện 25 KB (gzip 10 KB),
    không OpenCV.js, không framework. Đó là lý do app chạy được trên điện thoại yếu và offline.
    `@vitejs/plugin-basic-ssl` là devDependency duy nhất thêm vào, chỉ dùng cho server dev.
-4. **Ngưỡng phân loại nằm một chỗ**: `classify()` trong `web/src/grade.ts`. Đừng rải magic
-   number ra chỗ khác.
+4. **Ngưỡng phân loại nằm trong `web/src/grade.ts`**: `classify()` cho ô lựa chọn (A–D, Đúng/Sai)
+   và `classifyColumn()` cho cột chữ số. Hai loại ô chịu ánh sáng khác nhau: ô lựa chọn nằm cùng
+   hàng ngang nên so sánh trong câu; cột chữ số chạy dọc tờ nên phải trừ đường nền của cả cột.
+   Đừng dùng chung một hàm, và đừng rải magic number ra chỗ khác.
 5. **Thà từ chối phiếu còn hơn đọc sai**: mọi thay đổi làm tăng tỉ lệ nhận phiếu phải kèm bằng
    chứng là không tăng sai. Xem mục kiểm tra.
 6. Chữ trong UI là tiếng Việt; comment và tên biến là tiếng Anh.

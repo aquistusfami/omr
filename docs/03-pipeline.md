@@ -45,20 +45,48 @@ dính viền và ô trống cũng thành "đậm".
 
 ## 5. Phân loại
 
-`grade.ts → classify()`. Đầu vào là **các phương án của cùng một câu** (4 đáp án, 10 chữ số, hoặc
-2 ô Đúng/Sai). So sánh **tương đối trong câu**, không dùng ngưỡng tuyệt đối — nhờ vậy ảnh tối,
-lệch sáng, chụp bằng máy khác nhau đều cho cùng kết quả.
+Có **hai** bộ phân loại, vì hai loại ô chịu ánh sáng khác nhau.
+
+### 5a. Ô lựa chọn — `classify()`
+
+Đầu vào là **các phương án của cùng một câu**: 4 đáp án A–D, hoặc 2 ô Đúng/Sai nằm cạnh nhau.
+Các ô này nằm cùng một hàng ngang nên sáng gần như nhau; so sánh tương đối trong câu là đủ.
 
 ```
-đậm_nhất  < 0.7 × nhạt_nhất   → có mực, ngược lại: để trống
+khoảng_cách = nhì_đậm − đậm_nhất
 khoảng_cách ≥ max(20, 10% × nhạt_nhất)  → chọn ô đậm nhất
-ngược lại (có mực nhưng không phân biệt) → "multi" (tô nhiều ô)
+ngược lại, đậm_nhất < 0.8 × nhạt_nhất  → "multi" (tô nhiều ô)
+ngược lại                                → "blank"
 ```
 
-- `0.7`: một nét bút chì nhạt vẫn tối hơn giấy rõ rệt; nhiễu cảm biến thì không.
-- `max(20, 10%)`: 20 mức xám là mức tối thiểu để gọi là khác nhau; 10% để ảnh tối không bị
-  ngưỡng tuyệt đối bóp méo.
-- Không có trường hợp "đoán": tô nhiều hay mờ đều thành cờ, không thành đáp án.
+Không có phép thử "có mực hay không" tuyệt đối: bút chì tô nhạt chỉ tối hơn giấy ~20%, mà góc
+giấy bị bóng cũng vậy. Thứ tách được hai trường hợp là **tương phản bên trong câu**.
+
+### 5b. Cột chữ số — `classifyColumn()`
+
+Mã sinh viên và mã đề là **một cột 10 ô chạy dọc tờ giấy**. Trên bản quét thật, giấy phía trên
+sáng ~250 và phía dưới chỉ còn ~205 (vignette của máy scan), nên so sánh trong cột sẽ đem ô được
+tô ở trên cùng so với ô trống ở dưới cùng → đọc thành trống.
+
+Cách làm: coi 10 ô của cột là một đường nền.
+
+```
+1. khớp đường thẳng y = a + b·d qua 10 giá trị xám
+2. bỏ điểm lệch âm nhất (đó là ô được tô), khớp lại
+3. residual = đường_nền(d) − giá_trị(d)   // dương = đậm hơn nền
+4. residual_lớn_nhất < 20                  → "blank"
+   residual_thứ_hai ≥ 12                   → "multi"
+   ngược lại                               → chọn ô có residual lớn nhất
+```
+
+Đo trên **684 cột chữ số của 57 tờ thật** (mỗi cột có đúng một ô tô, nên là chân lý):
+
+| | nhỏ nhất | p1 | trung vị | p99 | lớn nhất |
+|---|---|---|---|---|---|
+| residual của ô tô | 25.9 | 40.3 | 94.3 | | |
+| residual nhiễu (ô trống) | | | 5.3 | 10.6 | 11.1 |
+
+Hai nhóm tách hẳn nhau, nên ngưỡng 20/12 nằm giữa khoảng trống.
 
 ## 6. Cờ và từ chối
 
@@ -74,12 +102,12 @@ Cờ **không** chặn việc xuất CSV. Giáo viên xem cờ trước, sửa t
 
 ## 7. Chỉnh ngưỡng
 
-Tất cả nằm ở `classify()` và `findAnchors()`. Nguyên tắc:
+Tất cả nằm ở `classify()`, `classifyColumn()` và `findAnchors()`. Nguyên tắc:
 
 - Nới `fill` của dấu (<0.86) → nhận thêm dấu nhưng có nguy cơ nhận cả ô đã tô.
 - Nới dung sai khớp → chấm được ảnh nghiêng nhiều hơn nhưng dễ khớp sai dấu.
-- Giảm `0.7` → nhận cả vết bẩn nhạt; tăng → bỏ sót bút chì mờ.
 - Giảm `max(20, 10%)` → tách được nét rất nhạt nhưng bắt đầu chia đôi nhiễu.
+- Giảm `20` của cột chữ số → bắt đầu nhận ô trống thành số; giảm `12` → bỏ qua ô tô đôi.
 
 Sau **mỗi** thay đổi: chạy `make_fixtures.py --count 30` và so số ô sai. Xem AGENTS.md.
 

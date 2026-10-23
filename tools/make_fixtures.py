@@ -49,7 +49,7 @@ def centres(tmpl: dict, block: str) -> list[tuple[float, float]]:
     return [(ox + i * dx, oy + j * dy) for j in range(b["rows"]) for i in range(b["cols"])]
 
 
-def fill_bubbles(img: Image.Image, tmpl: dict, answers: dict) -> None:
+def fill_bubbles(img: Image.Image, tmpl: dict, answers: dict, faint: bool = False) -> None:
     """answers: {"student_id": "123456789", "exam_code": "042",
                  "p1": {"1": "A", ...}, "p2": {"11": ["D", "S", ...], ...}}"""
     from PIL import ImageDraw
@@ -63,7 +63,9 @@ def fill_bubbles(img: Image.Image, tmpl: dict, answers: dict) -> None:
         for cx, cy in points:
             q = to_src @ np.array([cx, cy, 1.0])
             x, y = q[0] / q[2] * scale, q[1] / q[2] * scale
-            d.ellipse([x - r, y - r, x + r, y + r], fill=random.randint(25, 55))
+            # faint: a light pencil mark, the kind that scans at ~75-80% of the paper
+            d.ellipse([x - r, y - r, x + r, y + r],
+                      fill=random.randint(168, 196) if faint else random.randint(25, 55))
 
     def at(block: str, col: int, row: int):
         pts = centres(tmpl, block)
@@ -92,12 +94,31 @@ def to_pgm(arr: np.ndarray, path: Path) -> None:
     path.write_bytes(b"P5\n%d %d\n255\n" % (arr.shape[1], arr.shape[0]) + arr.astype(np.uint8).tobytes())
 
 
-def render(tmpl: dict, answers: dict, seed: int) -> np.ndarray:
+def render(tmpl: dict, answers: dict, seed: int, page: bool = False, faint: bool = False) -> np.ndarray:
     random.seed(seed)
     np.random.seed(seed)
     base = Image.open(FORM).convert("L").resize((WIDTH, WIDTH * 891 // 960), Image.LANCZOS)
-    fill_bubbles(base, tmpl, answers)
+    fill_bubbles(base, tmpl, answers, faint)
     base = base.filter(ImageFilter.GaussianBlur(1.2))
+
+    if page:
+        # A scanned A4 sheet: the form sits in the top part and four large corner
+        # marks frame the whole page - the bottom two are far outside the form's
+        # own anchors, which used to stretch the fit's search box.
+        from PIL import ImageDraw
+
+        page_w, page_h = 1240, 1754
+        page_img = Image.new("L", (page_w, page_h), 238)
+        # the form keeps its aspect ratio and sits in the top ~55% of the page
+        form_w = page_w - 90
+        base = base.resize((form_w, round(form_w * 891 / 960)), Image.LANCZOS)
+        page_img.paste(base, ((page_w - base.width) // 2, 40))
+        d = ImageDraw.Draw(page_img)
+        for x, y in ((60, 45), (1130, 45), (60, 1180), (1130, 1660)):
+            d.rectangle([x - 18, y - 5, x + 18, y + 5], fill=30)
+            d.rectangle([x - 5, y - 18, x + 5, y + 18], fill=30)
+        d.rectangle([40, 1230, page_w - 40, 1600], outline=120, width=3)
+        base = page_img
 
     # perspective: jitter the four corners by up to 4%
     w, h = base.size
@@ -125,6 +146,9 @@ def render(tmpl: dict, answers: dict, seed: int) -> np.ndarray:
     light = 1.0 - 0.28 * (((xx - w * random.uniform(0.2, 0.8)) / w) ** 2 +
                           ((yy - h * random.uniform(0.2, 0.8)) / h) ** 2)
     arr = arr * np.clip(light, 0.55, 1.05)
+    if page:
+        # scanner vignette: the bottom of the page is clearly darker than the top
+        arr = arr * (1.0 - 0.22 * yy / h)
     arr += np.random.normal(0, 3.5, arr.shape)
     return np.clip(arr, 0, 255)
 
@@ -148,6 +172,8 @@ def main() -> None:
     p.add_argument("--count", type=int, default=3)
     p.add_argument("--seed", type=int, default=7)
     p.add_argument("--out", type=Path, default=OUT)
+    p.add_argument("--page", action="store_true", help="portrait A4 page with corner frame marks")
+    p.add_argument("--faint", action="store_true", help="light pencil fills instead of dark ones")
     args = p.parse_args()
 
     tmpl = json.loads(TEMPLATE.read_text())
@@ -155,9 +181,10 @@ def main() -> None:
     for i in range(args.count):
         seed = args.seed + i
         answers = random_answers(tmpl)
-        arr = render(tmpl, answers, seed)
-        to_pgm(arr, args.out / f"sheet-{i}.pgm")
-        (args.out / f"sheet-{i}.json").write_text(json.dumps(answers, indent=2))
+        arr = render(tmpl, answers, seed, args.page, args.faint)
+        name = "portrait" if args.page else "sheet"
+        to_pgm(arr, args.out / f"{name}-{i}.pgm")
+        (args.out / f"{name}-{i}.json").write_text(json.dumps(answers, indent=2))
     print(f"wrote {args.count} sheet(s) to {args.out}")
 
 

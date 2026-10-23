@@ -1,4 +1,8 @@
 node_modules/
+
+# phiếu đã tô / bản scan thật: dữ liệu cá nhân, không bao giờ vào git
+fixtures/private/
+*.pdf
 dist/
 *.log
 .DS_Store
