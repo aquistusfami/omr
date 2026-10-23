@@ -7,6 +7,9 @@ import { defineConfig } from "vitest/config";
 const https = process.env.HTTP ? undefined : {};
 
 export default defineConfig({
+  // relative asset URLs: the built app works at / on a phone LAN server and at
+  // /omr/ on GitHub Pages, with no base-path flag
+  base: "./",
   plugins: process.env.HTTP ? [] : [basicSsl()],
   server: {
     host: true,
