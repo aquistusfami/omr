@@ -18,7 +18,10 @@ Phiếu mẫu: `fixtures/blank-form.png` (ảnh phẳng của phiếu trống). 
 ## Trạng thái (2026-10-23)
 
 Đã chạy được: tách template, dò dấu góc + homography, đọc ô, quét tự động, IndexedDB, xuất
-CSV/XLSX/JSON.
+CSV/XLSX/JSON, CI trên GitHub Actions.
+
+**Chưa từng chạy trên điện thoại thật.** Toàn bộ phần camera (quyền, autoplay, https tự ký, độ
+trễ) mới chỉ được kiểm tra bằng type check. Đó là việc đầu tiên trước M1.
 Đo trên 30 ảnh giả lập: 1560 đơn vị trả lời, **0 sai**, 1 phiếu bị từ chối (fit xấu). 38 ms/phiếu
 trong Node ở 1400 px; trên điện thoại dự kiến vài trăm ms.
 
@@ -113,5 +116,8 @@ Chấp nhận: 0 đơn vị sai trên các phiếu được nhận; tỉ lệ t�
 
 ## Việc tiếp theo
 
-Theo thứ tự trong `docs/06-roadmap.md`. Việc gấp nhất là **M1: chạy trên 50 phiếu thật** —
-mọi con số độ chính xác hiện tại đều đến từ ảnh giả lập, chưa có ảnh chụp thật nào.
+1. Chạy thử trên điện thoại thật (https, camera, bíp, chống nhận trùng).
+2. **M1: chạy trên 50 phiếu thật** — mọi con số độ chính xác hiện tại đều đến từ ảnh giả lập.
+3. Đạt M1 rồi mới làm M2 (sửa tay trong app), sau đó M5 (đáp án + điểm).
+
+Tiến độ đầy đủ: `README.md` mục "Tiến độ" và `docs/06-roadmap.md`.

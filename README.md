@@ -34,21 +34,45 @@ python3 tools/make_fixtures.py --count 3
 # muốn thử bằng ảnh thì chụp phiếu thật, hoặc convert: python3 -c "from PIL import Image; Image.open('sheet-0.pgm').save('sheet-0.png')")
 ```
 
-## Trạng thái
+## Tiến độ
 
-- Đã có: dò dấu góc, nắn phối cảnh, đọc 220 ô trả lời, đánh dấu ô mờ/tô nhiều.
-- Đã có: quét tự động bằng camera gắn cố định, lưu IndexedDB, ảnh phiếu 900 px, phát hiện trùng
-  mã sinh viên, xuất CSV / Excel / JSON.
-- Đo trên 30 ảnh giả lập: 0 đáp án sai, 1 phiếu bị từ chối vì fit xấu.
-- Chưa có: sửa tay trong app, nhập đáp án và tính điểm, PWA offline.
-  Xem [docs/06-roadmap.md](docs/06-roadmap.md).
+Cập nhật 2026-10-23. Chi tiết và tiêu chí nghiệm thu: [docs/06-roadmap.md](docs/06-roadmap.md).
+
+| Phần | Trạng thái |
+|---|---|
+| Template từ phiếu thật, dò 4 dấu góc, nắn phối cảnh | ✅ |
+| Đọc 220 ô trả lời, cờ ô mờ / tô nhiều / ô trống | ✅ |
+| Quét tự động trên giá cố định, chống nhận trùng một phiếu | ✅ code + test, **chưa chạy trên điện thoại thật** |
+| Chụp thủ công (input file) khi không có camera | ✅ |
+| Lưu IndexedDB: kết quả + ảnh phiếu 900 px | ✅ |
+| Xuất CSV / Excel (.xlsx) / JSON | ✅ |
+| CI: type check, test, build, template, mở file xlsx | ✅ |
+| **M1 — đo trên 50 phiếu thật** | 🔴 **việc tiếp theo** |
+| M2 — sửa ô ngay trong app | ⬜ |
+| M3 — nắn theo từng khối (phiếu cong) | ⬜ |
+| M4 — chặn trùng, xoá ảnh theo lô | 🟡 đã đánh dấu trùng, chưa chặn |
+| M5 — nhập đáp án, tính điểm, phổ điểm | ⬜ |
+| M6 — PWA offline, gộp nhiều điện thoại | ⬜ |
+
+Con số hiện có chỉ từ **ảnh giả lập**: 30 phiếu, 1560 đơn vị trả lời, 0 sai, 1 phiếu bị từ chối
+(3%), 38 ms/phiếu trong Node. Chưa có phép đo nào trên phiếu chụp thật.
+
+## Việc tiếp theo
+
+1. **Chạy thử trên điện thoại thật** (~5 phút): mở https, cấp quyền camera, đặt 3–5 phiếu đã tô,
+   kiểm tra bíp + banner xanh + nhấc phiếu ra mới nhận phiếu tiếp. Đây là phần chưa được kiểm
+   chứng — máy phát triển không có trình duyệt.
+2. **M1**: chụp 50 phiếu thật kèm bảng đáp án chấm tay, đo 4 con số (ô sai, tỉ lệ từ chối, tỉ lệ
+   cờ, giây/phiếu). Không đạt thì chỉnh `classify()` theo dữ liệu thật rồi đo lại.
+3. Đạt M1 mới chấm 500 phiếu thật; sau đó mới làm M2 (sửa tay trong app) — nó là khoảng trống
+   giữa "có file Excel" và "quy trình khép kín".
 
 ## Điều kiện để chấm đúng
 
 1. In đúng **100% scale**, cùng một máy in cho cả 500 phiếu. In "fit to page" là lệch template.
 2. Điện thoại **song song mặt phiếu**, cách 30–40 cm, đủ sáng, không bóng tay.
    Giá đỡ 50–100k (hoặc chặn sách) là đủ — xem [docs/05-operations.md](docs/05-operations.md).
-   Quét tự động bắt buộc điện thoại phải cố định."
+   Quét tự động bắt buộc điện thoại phải cố định.
 3. Ảnh phải thấy **đủ 4 dấu góc đen** của phiếu.
 
 ## Tài liệu

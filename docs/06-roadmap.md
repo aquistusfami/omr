@@ -1,20 +1,37 @@
 # Roadmap
 
 Mỗi mốc có tiêu chí nghiệm thu đo được. Đừng làm mốc sau khi mốc trước chưa đạt.
+Ký hiệu: ✅ xong · 🟡 một phần · 🟠 code xong, chưa kiểm chứng trên thiết bị thật · 🔴 đang làm · ⬜ chưa làm.
 
 ## M0 — Nền tảng ✅ (2026-10-23)
 
 Template từ phiếu thật, dò dấu góc, nắn phối cảnh, đọc 220 ô, cờ ô mờ/tô nhiều, CSV, giao diện
 một màn hình.
 
-Bổ sung sau M0: **quét tự động** (camera cố định, máy trạng thái ở `scan.ts`), **IndexedDB**
-thay localStorage, ảnh phiếu 900 px mỗi bản ghi, đánh dấu trùng mã SV, xuất **XLSX** và **JSON**.
-
 Nghiệm thu đã đạt: 30 ảnh giả lập, 1560 đơn vị trả lời, 0 sai, 1 phiếu từ chối (3%), 38 ms/phiếu.
+
+## M0+ — Quét tự động, lưu trữ, xuất file 🟠 (2026-10-23)
+
+Làm sau M0 vì yêu cầu vận hành thật (treo điện thoại, quét liên tục, báo cáo Excel):
+
+- **Quét tự động**: camera cố định, máy trạng thái `scan.ts` — nhận sau hai lần đọc khớp nhau,
+  chỉ nhận lại khi phiếu đã nhấc ra. Banner lớn + bíp + rung.
+- **IndexedDB** thay localStorage: 2 store (`sheets`, `thumbs`), index `studentId`, ghi xong mới
+  báo "đã nhận".
+- **Ảnh phiếu 900 px** mỗi bản ghi (~60 KB, 500 phiếu ≈ 30 MB) làm bằng chứng đối chiếu.
+- **Xuất CSV / XLSX / JSON**; cột `trung` đánh dấu mã SV quét lại.
+- **CI** GitHub Actions: tsc, test, build, template `--check`, mở file .xlsx bằng openpyxl.
+
+Kiểm chứng: 11 test (pipeline, máy trạng thái, zip/xlsx), build 25 KB, chạy từng bước CI trên máy.
+**Chưa chạy trên điện thoại thật** — không có trình duyệt trên máy phát triển.
 
 ## M1 — Đo trên phiếu thật 🔴 việc tiếp theo
 
 Chụp 50 phiếu thật (đã tô, có đáp án chấm tay), chạy app, so từng ô.
+
+Bước 0 (5 phút, trước khi chuẩn bị 50 phiếu): chạy thử trên điện thoại thật — mở https, cấp
+quyền camera, đặt 3–5 phiếu, xác nhận bíp + banner xanh và việc nhấc phiếu ra mới nhận tiếp.
+Nếu camera không mở được thì dùng "Chụp thủ công" cho M1 và ghi lại model điện thoại.
 
 Cần:
 - 50 phiếu + bảng đáp án tay.
@@ -25,7 +42,7 @@ Nếu sai: dừng, chỉnh `classify()` theo dữ liệu thật, đo lại. Khô
 
 Đây là mốc duy nhất chặn việc dùng thật. Mọi con số hiện tại đến từ ảnh giả lập.
 
-## M2 — Sửa tay trong app
+## M2 — Sửa tay trong app ⬜
 
 Hiện cờ chỉ hiện ra, muốn sửa phải mở Excel. Với 10–20% phiếu có cờ thì đó là 50–100 dòng sửa
 tay ngoài app, dễ sai.
@@ -39,7 +56,7 @@ Tiêu chí: sửa xong một phiếu có 3 cờ trong <30 giây, không cần Ex
 
 Phụ thuộc: phải lưu được ảnh (M4) hoặc nắn lại từ ảnh gốc.
 
-## M3 — Nắn theo từng khối
+## M3 — Nắn theo từng khối ⬜
 
 Hiện dùng một homography cho cả trang. Phiếu bị cong (gáy vở, mép bàn) sẽ lệch dần về phía xa.
 19 dấu nhỏ đã có sẵn ở mỗi vùng — dùng chúng làm mốc cục bộ.
@@ -61,7 +78,7 @@ Còn lại:
 
 Tiêu chí: khiếu nại một phiếu bất kỳ, mở được ảnh trong <2 giây.
 
-## M5 — Đáp án + tính điểm
+## M5 — Đáp án + tính điểm ⬜
 
 - Nhập đáp án một lần cho mỗi mã đề.
 - Tính điểm theo thang cấu hình được (PHẦN I: mỗi câu đúng; PHẦN II: số ý đúng → điểm, theo
@@ -70,7 +87,7 @@ Tiêu chí: khiếu nại một phiếu bất kỳ, mở được ảnh trong <2
 
 Chưa làm vì chưa biết thang điểm của môn này. Đừng đoán — hỏi người ra đề.
 
-## M6 — Nhiều điện thoại / PWA offline
+## M6 — Nhiều điện thoại / PWA offline ⬜
 
 - Manifest + service worker để cài ra màn hình chính và chạy khi mất mạng.
 - Nếu cần gộp nhiều điện thoại: một server nhỏ (FastAPI + SQLite, chạy trên laptop trong LAN)
