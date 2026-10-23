@@ -5,6 +5,7 @@
   --muted: #6b7280;
   --line: #e3e6ea;
   --accent: #1f6feb;
+  --ok: #0f8a3c;
   --warn: #b45309;
   --bad: #b91c1c;
   color-scheme: light;
@@ -13,14 +14,16 @@
 body {
   margin: 0 auto;
   max-width: 780px;
-  padding: 16px 16px 64px;
+  padding: 12px 16px 64px;
   background: var(--bg);
   color: var(--ink);
   font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 header h1 { font-size: 20px; margin: 8px 0 2px; }
 .muted { color: var(--muted); font-size: 13px; }
-.actions { display: flex; gap: 8px; margin: 16px 0 8px; flex-wrap: wrap; }
+
+.modes { display: flex; gap: 8px; margin: 12px 0 8px; }
+.actions { display: flex; gap: 8px; margin: 12px 0 4px; flex-wrap: wrap; }
 button, .primary {
   font: inherit;
   border: 1px solid var(--line);
@@ -31,8 +34,38 @@ button, .primary {
   cursor: pointer;
 }
 .primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+button.active { border-color: var(--accent); color: var(--accent); font-weight: 600; }
 button.ghost { background: transparent; color: var(--muted); }
-.status { min-height: 22px; color: var(--muted); font-size: 13px; }
+
+/* camera stage */
+.stage { position: relative; margin: 8px 0; border-radius: 12px; overflow: hidden; background: #000; }
+.stage video { display: block; width: 100%; height: auto; max-height: 62vh; object-fit: contain; }
+.guide {
+  position: absolute;
+  inset: 8% 10% 8% 10%;
+  border: 2px dashed rgba(255, 255, 255, 0.85);
+  border-radius: 10px;
+  pointer-events: none;
+}
+
+/* big status banner: the whole point of the mounted-phone workflow */
+.banner {
+  margin: 10px 0;
+  padding: 14px 16px;
+  border-radius: 12px;
+  font-size: 18px;
+  font-weight: 600;
+  text-align: center;
+  border: 1px solid var(--line);
+  background: var(--card);
+  transition: background 120ms, color 120ms;
+}
+.banner.wait { color: var(--muted); }
+.banner.ok { background: #e8f7ee; border-color: #b9e3c8; color: var(--ok); }
+.banner.bad { background: #fdecec; border-color: #f3c2c2; color: var(--bad); }
+
+.status { min-height: 20px; color: var(--muted); font-size: 13px; margin: 4px 0; }
+
 .list { display: grid; gap: 8px; margin-top: 8px; }
 .row {
   position: relative;
@@ -51,5 +84,6 @@ button.ghost { background: transparent; color: var(--muted); }
   overflow-wrap: anywhere;
 }
 .flags { color: var(--warn); font-size: 12px; margin-top: 4px; }
+.dup { color: var(--bad); font-size: 12px; font-weight: 600; }
 .row.rejected .answers { color: var(--bad); font-family: inherit; }
 .remove { position: absolute; top: 6px; right: 6px; padding: 4px 8px; font-size: 12px; }

@@ -7,6 +7,9 @@ Mỗi mốc có tiêu chí nghiệm thu đo được. Đừng làm mốc sau khi
 Template từ phiếu thật, dò dấu góc, nắn phối cảnh, đọc 220 ô, cờ ô mờ/tô nhiều, CSV, giao diện
 một màn hình.
 
+Bổ sung sau M0: **quét tự động** (camera cố định, máy trạng thái ở `scan.ts`), **IndexedDB**
+thay localStorage, ảnh phiếu 900 px mỗi bản ghi, đánh dấu trùng mã SV, xuất **XLSX** và **JSON**.
+
 Nghiệm thu đã đạt: 30 ảnh giả lập, 1560 đơn vị trả lời, 0 sai, 1 phiếu từ chối (3%), 38 ms/phiếu.
 
 ## M1 — Đo trên phiếu thật 🔴 việc tiếp theo
@@ -46,10 +49,14 @@ Cần: với mỗi khối, chọn 2–3 dấu gần nhất, fit lại phép bi�
 Tiêu chí: ảnh chụp phiếu hơi cong (đặt trên mặt phẳng mềm) vẫn 0 sai. Chỉ làm khi M1 cho thấy
 đây là nguyên nhân sai thật.
 
-## M4 — Lưu ảnh gốc + chống trùng
+## M4 — Lưu ảnh + chống trùng 🟡 một phần
 
-- Lưu ảnh đã thu nhỏ (~150 KB/phiếu, 500 phiếu ≈ 75 MB) trong IndexedDB, không phải localStorage.
-- Cảnh báo khi mã sinh viên đã có trong danh sách (chụp trùng).
+Đã có: ảnh nắn phẳng 900 px (~60 KB/phiếu, 500 phiếu ≈ 30 MB) trong IndexedDB; index `studentId`
+và cột `trung` trong file xuất.
+
+Còn lại:
+- Hiện ảnh khi bấm vào một dòng (thuộc M2, chung một UI).
+- **Chặn** trùng chứ không chỉ đánh dấu (hỏi lại người chấm: ghi đè hay bỏ qua).
 - Xoá ảnh theo lô sau khi hết khiếu nại.
 
 Tiêu chí: khiếu nại một phiếu bất kỳ, mở được ảnh trong <2 giây.

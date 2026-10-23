@@ -6,28 +6,34 @@ Hướng dẫn cho người/agent tiếp tục làm việc trên repo này. Đ�
 
 Web app một trang, không framework, chấm **phiếu trả lời trắc nghiệm** in sẵn từ ảnh chụp bằng
 điện thoại. Mục tiêu: 500 phiếu/buổi thi, chỉ có điện thoại, không máy scan, không thiết bị
-chuyên dụng. Toàn bộ xử lý chạy trên máy (không server, không cloud); kết quả lưu
-`localStorage`, xuất CSV.
+chuyên dụng. Toàn bộ xử lý chạy trên máy (không server, không cloud); kết quả lưu **IndexedDB**
+(kèm ảnh phiếu), xuất **CSV / XLSX / JSON**.
+
+Hai chế độ: **quét tự động** (camera gắn cố định, tự nhận phiếu, bíp khi đã lưu) và **chụp thủ
+công** (input file, dùng khi không có https hoặc không cấp quyền camera).
 
 Phiếu mẫu: `fixtures/blank-form.png` (ảnh phẳng của phiếu trống). Hình học đã trích xuất thành
 `fixtures/template.json` — 240 ô, 21 dấu góc.
 
 ## Trạng thái (2026-10-23)
 
-Đã chạy được: tách template, dò dấu góc + homography, đọc ô, xuất CSV, giao diện cơ bản.
+Đã chạy được: tách template, dò dấu góc + homography, đọc ô, quét tự động, IndexedDB, xuất
+CSV/XLSX/JSON.
 Đo trên 30 ảnh giả lập: 1560 đơn vị trả lời, **0 sai**, 1 phiếu bị từ chối (fit xấu). 38 ms/phiếu
 trong Node ở 1400 px; trên điện thoại dự kiến vài trăm ms.
 
-Chưa có: sửa tay trong app, nhập đáp án + tính điểm, lưu ảnh gốc, chống trùng phiếu, PWA offline.
+Chưa có: sửa tay trong app, nhập đáp án + tính điểm, PWA offline. Chống trùng mới ở mức đánh dấu
+cột `trung`, chưa chặn.
 Xem `docs/06-roadmap.md`.
 
 ## Lệnh
 
 ```bash
-# web app (điện thoại mở http://<ip-lan>:5173)
+# web app — mặc định https (camera cần secure context)
 cd web && npm install && npm run dev
+HTTP=1 npm run dev     # http, chỉ để xem giao diện trên máy tính
 
-cd web && npm test        # 3 ảnh giả lập trong web/tests/fixtures
+cd web && npm test        # grade + state machine + xlsx
 cd web && npm run build   # tsc --noEmit + vite build
 
 # công cụ python (numpy, scipy, pillow — không cần opencv)
@@ -50,9 +56,12 @@ python3 tools/make_fixtures.py --count 30 --out /tmp/sheets   # để đo độ 
 | `web/src/image.ts` | xám hoá, downscale, warp bilinear, lấy mẫu đĩa, Otsu, đọc PGM |
 | `web/src/anchors.ts` | tìm dấu góc, fit canvas → ảnh, kiểm tra chất lượng |
 | `web/src/grade.ts` | pipeline hoàn chỉnh + phân loại ô |
-| `web/src/store.ts` | localStorage |
-| `web/src/export.ts` | CSV |
-| `web/src/main.ts` | UI (một màn hình) |
+| `web/src/scan.ts` | máy trạng thái quét tự động (thuần, có test) |
+| `web/src/capture.ts` | getUserMedia, lấy khung hình, ảnh thu nhỏ |
+| `web/src/store.ts` | IndexedDB: `sheets` + `thumbs` (ảnh tách riêng) |
+| `web/src/export.ts` | bảng dùng chung cho CSV/XLSX, JSON |
+| `web/src/xlsx.ts` | ghi .xlsx tối giản (zip không nén), không dependency |
+| `web/src/main.ts` | UI: hai chế độ, banner, bíp, danh sách, xuất file |
 | `docs/` | kiến trúc, định dạng template, thuật toán, vận hành, roadmap |
 
 ## Bất biến — đừng phá
@@ -62,19 +71,32 @@ python3 tools/make_fixtures.py --count 30 --out /tmp/sheets   # để đo độ 
 2. **Hệ toạ độ canvas**: 4 dấu cực trị của phiếu ánh xạ vào `(0,0)-(1000,0)-(1000,H)-(0,H)`.
    Nhờ vậy tỉ lệ in, lề, khổ giấy không ảnh hưởng — chỉ tỉ lệ khung in là quan trọng.
    Đổi quy ước này là phải sinh lại template và sửa docs/02.
-3. **Không thêm dependency** nếu <50 dòng code tự viết là đủ. Hiện tại bundle 14 KB, không
-   OpenCV.js, không framework. Đó là lý do app chạy được trên điện thoại yếu và offline.
+3. **Không thêm dependency** nếu <50 dòng code tự viết là đủ. Bundle hiện 25 KB (gzip 10 KB),
+   không OpenCV.js, không framework. Đó là lý do app chạy được trên điện thoại yếu và offline.
+   `@vitejs/plugin-basic-ssl` là devDependency duy nhất thêm vào, chỉ dùng cho server dev.
 4. **Ngưỡng phân loại nằm một chỗ**: `classify()` trong `web/src/grade.ts`. Đừng rải magic
    number ra chỗ khác.
 5. **Thà từ chối phiếu còn hơn đọc sai**: mọi thay đổi làm tăng tỉ lệ nhận phiếu phải kèm bằng
    chứng là không tăng sai. Xem mục kiểm tra.
 6. Chữ trong UI là tiếng Việt; comment và tên biến là tiếng Anh.
+7. **Mỗi phiếu chỉ được ghi một lần.** `Scanner` chỉ nhận sau hai lần đọc khớp nhau và chỉ nhận
+   lại khi phiếu đã được nhấc ra. Đừng bỏ cơ chế này — nó là thứ chặn 1 phiếu thành 20 dòng.
+8. **"Đã nhận" nghĩa là đã ghi xong**: `store.add()` chỉ resolve sau khi transaction commit.
+   Đừng đổi thành ghi rồi trả về ngay, người dùng sẽ nhấc phiếu khi dữ liệu chưa xuống đĩa.
 
 ## Cách kiểm tra một thay đổi
 
 ```bash
 cd web && npm test && npx tsc --noEmit
 python3 tools/build_template.py --check
+```
+
+Sửa `scan.ts` thì sửa test trước — hành vi "nhận một lần, nhấc ra mới nhận tiếp" là hợp đồng.
+Chạm vào `xlsx.ts` thì kiểm tra file thật:
+
+```bash
+cd web && npx vitest run tests/xlsx.test.ts   # ghi /tmp/opencode/test.xlsx
+uv run --with openpyxl python3 -c "import openpyxl; print(openpyxl.load_workbook('/tmp/opencode/test.xlsx').active.dimensions)"
 ```
 
 Muốn biết thay đổi có làm hỏng độ chính xác không:

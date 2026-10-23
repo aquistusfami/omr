@@ -19,6 +19,8 @@ export interface GradeResult {
   p2: Record<string, { values: string[]; flags: Flag[]; confidence: number }>;
   flags: string[];
   anchors: { used: number; residual: number };
+  /** rectified page, only when the caller asks for it (thumbnail / review) */
+  canvas?: Gray;
 }
 
 /** Output pixels per canvas unit. 1.5 gives a bubble of ~33 px. */
@@ -63,7 +65,11 @@ function blockValues(canvas: Gray, tmpl: Template, block: string): number[][] {
   return rows;
 }
 
-export function gradeSheet(image: Gray, tmpl: Template): GradeResult {
+export function gradeSheet(
+  image: Gray,
+  tmpl: Template,
+  options: { keepCanvas?: boolean } = {},
+): GradeResult {
   const match = findAnchors(image, tmpl);
   const empty: GradeResult = {
     ok: false,
@@ -100,6 +106,7 @@ export function gradeSheet(image: Gray, tmpl: Template): GradeResult {
     p2: {},
     flags: [],
     anchors: { used: match.used, residual: Math.round(match.residual * 10) / 10 },
+    canvas: options.keepCanvas ? canvas : undefined,
   };
 
   const note = (where: string, unit: Unit) => {

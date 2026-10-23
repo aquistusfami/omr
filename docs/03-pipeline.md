@@ -100,3 +100,30 @@ nâng cấp là: dùng 19 dấu nhỏ làm mốc cục bộ, mỗi khối nắn 
 
 38 ms/phiếu trong Node ở ảnh 1400 px (ảnh 1800 px ~60 ms). Trên điện thoại tầm trung dự kiến
 150–400 ms. 500 phiếu ⇒ 2–4 phút tính toán; thời gian còn lại là chụp và căn phiếu.
+
+## 10. Quét tự động
+
+`web/src/scan.ts` là máy trạng thái thuần (không đụng DOM, có test riêng). Mỗi ~220 ms lấy một
+khung hình, chấm, rồi đẩy kết quả vào `Scanner`:
+
+```
+idle ──đọc được──▶ settle ──hai lần khớp sau ≥350 ms──▶ cooldown
+  ▲                   │                                      │
+  └──2 khung không thấy dấu◀─────────────────────────────────┘
+      4 khung có dấu nhưng không đọc được ⇒ "reject" một lần, sang cooldown
+```
+
+Ba tham số, đổi ở constructor:
+
+| Tham số | Mặc định | Ý nghĩa |
+|---|---|---|
+| `settleMs` | 350 | hai lần đọc phải cách nhau ít nhất chừng này mới tin là phiếu đứng yên |
+| `badFramesNeeded` | 4 | ~0,9 s có dấu góc nhưng fit hỏng thì mới báo đỏ (tránh báo khi đang đặt phiếu) |
+| `emptyFramesNeeded` | 2 | phải thấy 2 khung không có dấu mới cho phép nhận phiếu tiếp |
+
+Hai lần đọc "khớp" = mã SV, mã đề và **mọi** đáp án giống nhau (`sameAnswers()`); chất lượng
+ảnh có thể khác. Nhờ vậy một khung bị nhoè giữa chừng không tạo ra kết quả nửa vời.
+
+Điều quan trọng nhất: sau khi nhận, `cooldown` chặn mọi lần nhận tiếp cho đến khi phiếu được
+nhấc ra. Đây là thứ duy nhất khiến "treo điện thoại và đặt phiếu" không sinh ra 20 dòng cho một
+phiếu. Đừng bỏ.

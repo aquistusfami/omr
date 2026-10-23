@@ -9,61 +9,75 @@ Dành cho người chấm, không cần biết code.
    trực tiếp. Tránh bóng người chấm đổ lên phiếu.
 3. **Giá đỡ điện thoại**: tripod/kẹp bàn 50–100k, hoặc chặn 4 cuốn sách. Điện thoại song song
    mặt bàn, cách phiếu **30–40 cm**, phiếu chiếm ~80% khung hình và **thấy đủ 4 dấu góc**.
-   Chụp bằng tay không giá đỡ được, nhưng tỉ lệ phải chụp lại sẽ tăng.
-4. **Chạy thử 10 phiếu** đã tô sẵn, có đáp án biết trước. Nếu sai một ô nào, dừng lại: xem
+   Điện thoại phải **cố định**: đây là điều kiện để chế độ quét tự động dùng được.
+4. **Mở web bằng https**, không phải http. Camera trình duyệt chỉ chạy trên https; lần đầu điện
+   thoại sẽ cảnh báo chứng chỉ tự ký — bấm "Nâng cao" → "Vẫn tiếp tục". Nếu không mở được camera,
+   dùng "Chụp thủ công" (vẫn chấm được, chỉ chậm hơn).
+5. **Chạy thử 10 phiếu** đã tô sẵn, có đáp án biết trước. Nếu sai một ô nào, dừng lại: xem
    `docs/03-pipeline.md` mục "Chế độ hỏng đã biết" trước khi chấm thật.
-5. Cắm sạc hoặc mang pin dự phòng. Chấm 500 phiếu liên tục rất tốn pin và màn hình sáng.
+6. Cắm sạc hoặc mang pin dự phòng. Chấm 500 phiếu liên tục rất tốn pin và màn hình sáng.
 
-## Trình tự chấm
+## Trình tự chấm — quét tự động
 
 ```
-mở web (đã lưu địa chỉ)  →  bấm "Chụp phiếu"  →  chụp  →  đọc kết quả ngay
-   ↳ nếu hiện "Không đọc được phiếu": đặt lại phiếu, chụp lại (không cần xoá gì)
-   ↳ nếu hiện "cần xem: ...": phiếu vẫn được lưu, ghi chú lại để xem sau
+bấm "Quét tự động"  →  đặt phiếu vào khung  →  chờ tiếng bíp + banner xanh
+   →  nhấc phiếu ra  →  đặt phiếu tiếp theo
 ```
 
-- Giữ **thứ tự xếp phiếu** trùng thứ tự chụp. Không cần đánh số: mã sinh viên đã nằm trong kết quả.
-- Mỗi phiếu ~8–10 giây kể cả căn lại. 500 phiếu ≈ **75–90 phút** cho một người; hai người chia
-  đôi thì nhanh hơn nhưng phải dùng hai điện thoại và gộp CSV sau (chưa hỗ trợ gộp tự động —
-  mở hai file CSV trong Excel là xong, cột `ma_sv` để đối chiếu).
-- **Xuất CSV mỗi 50 phiếu.** Kết quả nằm trong bộ nhớ trình duyệt; xoá dữ liệu trang web hoặc
-  chế độ ẩn danh là mất sạch. Đây là rủi ro vận hành lớn nhất, không phải thuật toán.
-- Không tắt trình duyệt giữa chừng. Không dùng tab ẩn danh.
+- **Bíp + banner xanh** = phiếu đã được lưu xong vào máy. Chỉ nhấc phiếu khi nghe bíp.
+  Banner ghi mã sinh viên, mã đề và số ô cần xem.
+- Banner đỏ = chưa đọc được (mờ, lệch, thiếu dấu góc). Nhấc phiếu ra, đặt lại. Không cần bấm gì.
+- Hệ thống **không nhận lại cùng một phiếu** khi nó vẫn nằm dưới camera: phải nhấc ra ít nhất
+  ~0,5 giây rồi đặt phiếu khác.
+- Giữ **thứ tự xếp phiếu** trùng thứ tự quét. Không cần đánh số: mã sinh viên đã nằm trong kết quả.
+- Mỗi phiếu ~4 giây. 500 phiếu ≈ **35–45 phút** cho một người.
 
-## Sau khi chụp xong
+Chế độ "Chụp thủ công" dùng khi không mở được camera: bấm "Chụp phiếu", chụp, đọc kết quả ngay.
+Mỗi phiếu ~8–10 giây.
 
-1. Xuất CSV lần cuối. Tên file có ngày.
+- **Xuất file mỗi 50 phiếu.** Kết quả nằm trong IndexedDB của trình duyệt; xoá dữ liệu trang web
+  hoặc dùng chế độ ẩn danh là mất sạch. Đây là rủi ro vận hành lớn nhất, không phải thuật toán.
+- Không tắt trình duyệt giữa chừng. Không dùng tab ẩn danh. Rời tab là camera tự dừng.
+- Mã sinh viên đã có trong máy mà quét lại sẽ hiện **"trùng"**: phiếu vẫn được lưu, nhưng phải
+  xoá một dòng trước khi xuất file cuối.
+
+## Sau khi chấm xong
+
+1. Xuất lần cuối — chọn định dạng:
+   - **CSV**: mở bằng Excel/Google Sheets, mỗi phiếu một dòng.
+   - **Excel** (.xlsx): mở thẳng, không cần import, giữ nguyên số 0 đầu của mã sinh viên.
+   - **JSON**: bản đầy đủ để lưu trữ hoặc đưa sang công cụ khác.
 2. Lọc cột `can_kiem_tra` khác rỗng. Mỗi dòng là một phiếu cần xem:
    - `cau7:multi` — tô nhiều ô ở câu 7 (hoặc có mực nhưng không phân biệt được).
    - `cau11C:blank` — ý C câu 11 không tô.
-   - `student_id[3]:blank` — chữ số thứ 3 của mã sinh viên không đọc được (`?` trong CSV).
+   - `student_id[3]:blank` — chữ số thứ 3 của mã sinh viên không đọc được (`?` trong file).
    - `exam_code[1]:blank` — chữ số thứ nhất của mã đề không đọc được.
-3. Với mỗi dòng đó, mở ảnh gốc của phiếu (xem mục dưới) và sửa trực tiếp trong Excel.
-4. Đối chiếu số dòng CSV với số phiếu thật. Dòng bị từ chối có `can_kiem_tra = REJECT:<lý do>`;
-   nếu đã chụp lại phiếu đó thì **bấm "xoá" dòng đỏ trong app** trước khi xuất CSV cuối, không thì
-   file có hai dòng cho cùng một phiếu.
+3. Với mỗi dòng đó, mở ảnh phiếu đã lưu trong app (xem mục dưới) và sửa trực tiếp trong Excel.
+4. Đối chiếu số dòng với số phiếu thật. Dòng bị từ chối có `can_kiem_tra = REJECT:<lý do>`;
+   nếu đã chụp lại phiếu đó thì **bấm "xoá" dòng đỏ trong app** trước khi xuất file cuối, không
+   thì file có hai dòng cho cùng một phiếu. Cột `trung` đánh dấu các dòng cùng mã sinh viên.
 
 Tỉ lệ có cờ phụ thuộc bút chì và ánh sáng; thực tế nên chuẩn bị tâm thế **10–20% phiếu cần xem**.
 Nếu vượt 30%, đừng cố sửa từng dòng — kiểm tra lại ánh sáng và bút chì trước.
 
-## Ảnh gốc
+## Ảnh phiếu
 
-App **không** lưu ảnh (xem roadmap M4). Ảnh do app camera của điện thoại tạo ra thường vẫn nằm
-trong thư viện ảnh. Trước khi chấm, kiểm tra: chụp một phiếu rồi mở thư viện xem ảnh có được lưu
-không. Nếu có, **giữ nguyên toàn bộ ảnh đến khi hết khiếu nại** — đó là bằng chứng duy nhất khi
-một sinh viên thắc mắc.
+App lưu **một ảnh đã nắn phẳng, rộng 900 px** cho mỗi phiếu (nằm trong IndexedDB, không nằm
+trong thư viện ảnh). Ảnh này đủ để đối chiếu ô nào được tô khi có khiếu nại.
 
-Nếu ảnh không được lưu: dùng app camera có sẵn để chụp trước vào thư viện, rồi chọn ảnh từ thư viện
-trong web (nút "Chụp phiếu" cho phép chọn ảnh có sẵn). Chậm hơn nhưng có bằng chứng.
+- Dung lượng: ~60 KB/phiếu, 500 phiếu ≈ 30 MB — thoải mái cho điện thoại.
+- Ảnh **mất khi xoá dữ liệu trang web**. Xuất file và sao lưu trước khi xoá.
+- Ảnh không có trong file CSV/Excel/JSON. Nếu cần bằng chứng lâu dài, giữ nguyên dữ liệu trình
+  duyệt trên máy đã chấm cho đến khi hết khiếu nại.
 
 ## Khi có khiếu nại
 
-Kết quả trong CSV chỉ là kết luận của máy. Đối chiếu theo thứ tự:
+Kết quả trong file chỉ là kết luận của máy. Đối chiếu theo thứ tự:
 
-1. Ảnh gốc của phiếu đó.
+1. Ảnh phiếu đã lưu trong app của đúng dòng đó.
 2. Nếu ảnh mờ/thiếu góc: đó là lỗi chụp, phải chấm tay phiếu giấy.
 3. Nếu ảnh rõ mà máy đọc sai: ghi lại mã phiếu, câu, giá trị máy đọc và giá trị đúng. Đây là dữ
-   liệu để chỉnh ngưỡng — đừng chỉ sửa CSV rồi bỏ qua.
+   liệu để chỉnh ngưỡng — đừng chỉ sửa file rồi bỏ qua.
 
 ## Sai số chấp nhận
 

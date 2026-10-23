@@ -31,10 +31,18 @@
         ├─ grade.ts     lấy mẫu 240 ô → phân loại theo từng "đơn vị trả lời"
         │               → 52 đơn vị: 9 mã SV + 3 mã đề + 10 câu A–D + 30 ý Đ/S
         │
-        └─ store.ts     localStorage  →  export.ts  →  CSV
+        ├─ scan.ts      máy trạng thái: nhận một lần / nhấc phiếu mới nhận tiếp
+        │
+        └─ store.ts     IndexedDB (`sheets` + `thumbs`)
+                        →  export.ts  →  CSV / XLSX / JSON
 ```
 
-Không có bước nào cần mạng. Ảnh gốc hiện **không được lưu** (xem roadmap M4 — cần cho khiếu nại).
+Không có bước nào cần mạng. Mỗi phiếu lưu kèm **một ảnh đã nắn phẳng, 900 px** (JPEG ~60 KB)
+làm bằng chứng khi có khiếu nại. Ảnh nằm trong object store riêng nên liệt kê/xuất file không
+phải tải ảnh.
+
+Camera lấy khung hình qua `capture.ts`: `getUserMedia` (bắt buộc https), vẽ vào canvas tối đa
+1800 px, chuyển xám, đưa vào đúng `gradeSheet()`. Chụp thủ công cũng đi qua đúng đường đó.
 
 ## Mô hình dữ liệu
 
@@ -48,11 +56,13 @@ Một bản ghi cho mỗi phiếu (`web/src/store.ts`):
   p1: { "1": "B", ..., "10": "C" },
   p2: { "11": "DSSDSS", ... },    // 6 ý A–F, D=Đúng, S=Sai, "" nếu trống/mờ
   flags: ["cau7:multi", "id[3]:blank"],
-  anchors: { used: 20, residual: 0.6 }
+  anchors: { used: 20, residual: 0.6 },
+  duplicate: false                // mã SV đã có trong máy
 }
 ```
 
-Không có bảng `answers` riêng, không có index: 500 bản ghi ≈ 400 KB, thừa sức cho localStorage.
+Không có bảng `answers` riêng. 500 bản ghi ≈ 400 KB (chưa kể ảnh), thừa sức cho IndexedDB.
+Có index `studentId` để đếm trùng.
 Khi nào cần nhiều thiết bị thì mới thêm server, và lúc đó `SheetRecord` chính là payload đồng bộ.
 
 ## Xử lý sai
