@@ -35,6 +35,8 @@ HTTP=1 npm run dev     # http, chỉ để xem giao diện trên máy tính
 
 cd web && npm test        # grade + state machine + xlsx
 cd web && npm run build   # tsc --noEmit + vite build
+# CI chạy đúng các lệnh trên, cộng thêm build_template.py --check và mở file .xlsx
+# bằng openpyxl: .github/workflows/ci.yml
 
 # công cụ python (numpy, scipy, pillow — không cần opencv)
 python3 tools/build_template.py          # tạo lại template.json + ảnh overlay
@@ -95,8 +97,8 @@ Sửa `scan.ts` thì sửa test trước — hành vi "nhận một lần, nhấ
 Chạm vào `xlsx.ts` thì kiểm tra file thật:
 
 ```bash
-cd web && npx vitest run tests/xlsx.test.ts   # ghi /tmp/opencode/test.xlsx
-uv run --with openpyxl python3 -c "import openpyxl; print(openpyxl.load_workbook('/tmp/opencode/test.xlsx').active.dimensions)"
+cd web && npx vitest run tests/xlsx.test.ts   # ghi omr-test.xlsx vào thư mục tmp
+uv run --with openpyxl python3 -c "import os,tempfile,openpyxl; print(openpyxl.load_workbook(os.path.join(tempfile.gettempdir(),'omr-test.xlsx')).active.dimensions)"
 ```
 
 Muốn biết thay đổi có làm hỏng độ chính xác không:

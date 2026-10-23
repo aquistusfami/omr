@@ -1,4 +1,6 @@
 import { writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import { toXlsx } from "../src/xlsx";
@@ -34,7 +36,7 @@ describe("toXlsx", () => {
   it("produces a readable xlsx package", async () => {
     const blob = toXlsx(HEAD, BODY, "Ket qua");
     const bytes = new Uint8Array(await blob.arrayBuffer());
-    writeFileSync("/tmp/opencode/test.xlsx", bytes);
+    writeFileSync(join(tmpdir(), "omr-test.xlsx"), bytes);
 
     const files = unzip(bytes);
     expect([...files.keys()].sort()).toEqual([

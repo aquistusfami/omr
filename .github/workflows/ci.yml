@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Cài dependency
+        run: npm ci
+        working-directory: web
+
+      - name: Type check
+        run: npx tsc --noEmit
+        working-directory: web
+
+      # 3 phiếu giả lập + máy trạng thái quét + file .xlsx
+      - name: Test
+        run: npm test
+        working-directory: web
+
+      - name: Build
+        run: npm run build
+        working-directory: web
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Cài dependency python
+        run: pip install numpy scipy pillow openpyxl
+
+      # template.json phải khớp fixtures/blank-form.png
+      - name: Template khớp phiếu mẫu
+        run: python3 tools/build_template.py --check
+
+      # kiểm tra độc lập: bước Test ở trên đã sinh ra file trong thư mục tmp
+      - name: File .xlsx mở được, giữ số 0 đầu
+        run: |
+          python3 - <<'PY'
+          import os, tempfile, openpyxl
+          path = os.path.join(tempfile.gettempdir(), "omr-test.xlsx")
+          sheet = openpyxl.load_workbook(path).active
+          assert sheet.title == "Ket qua"
+          assert sheet["B2"].value == "045123678", sheet["B2"].value
+          print("xlsx ok:", sheet.dimensions)
+          PY
