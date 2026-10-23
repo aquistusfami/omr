@@ -354,6 +354,36 @@ body {
 
 /* --------------------------------------------------------------- results */
 
+.panel {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  margin: 4px 0 10px;
+}
+.panel summary {
+  cursor: pointer;
+  padding: 12px 14px;
+  font-weight: 600;
+  list-style: none;
+}
+.panel summary::-webkit-details-marker { display: none; }
+.panel summary::after { content: " ▾"; color: var(--ink-2); }
+.panel[open] summary::after { content: " ▴"; }
+.panel-body { padding: 0 14px 14px; display: grid; gap: 10px; }
+.field { display: grid; gap: 4px; font-size: 13px; color: var(--ink-2); }
+.field textarea, .field input, .field select {
+  font: inherit;
+  color: var(--ink);
+  background: var(--ground);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px;
+}
+.field textarea { font: 13px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace; resize: vertical; }
+.fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.hint { margin: 0; font-size: 12px; color: var(--ink-2); }
+.score { margin-left: auto; font-weight: 700; font-variant-numeric: tabular-nums; }
+
 .results {
   padding-top: 6px;
 }

@@ -78,14 +78,17 @@ Còn lại:
 
 Tiêu chí: khiếu nại một phiếu bất kỳ, mở được ảnh trong <2 giây.
 
-## M5 — Đáp án + tính điểm ⬜
+## M5 — Đáp án + tính điểm 🟡 một phần (2026-10-24)
 
-- Nhập đáp án một lần cho mỗi mã đề.
-- Tính điểm theo thang cấu hình được (PHẦN I: mỗi câu đúng; PHẦN II: số ý đúng → điểm, theo
-  thang 0.1/0.25/0.5/1.0 hoặc thang riêng của trường).
-- Xuất thêm cột điểm và bảng phổ điểm.
+Đã làm:
 
-Chưa làm vì chưa biết thang điểm của môn này. Đừng đoán — hỏi người ra đề.
+- Dán đáp án theo mã đề vào mục "Đáp án & điểm" (mỗi dòng 40 ký tự), lưu ở localStorage.
+- Hai thang: phần I mỗi câu đúng = trọng số; phần II chia đều 6 ý **hoặc** đúng cả 6 ý mới có điểm.
+- Cột `diem`, `dung_p1`, `dung_p2` trong CSV/XLSX; điểm TB trên dòng trạng thái.
+- Điểm tính lại từ đáp án mỗi lần xem/xuất, không lưu vào bản ghi.
+
+Còn thiếu: phổ điểm / thống kê theo lớp, và thang điểm lẻ kiểu Bộ (0.1/0.25/0.5/1.0 theo số ý
+đúng) — hiện chỉ có chia đều hoặc tất cả. Làm khi có trường cần.
 
 ## M6 — Nhiều điện thoại / PWA offline ⬜
 

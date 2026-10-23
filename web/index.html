@@ -66,6 +66,39 @@
         <button id="clear" type="button" class="danger">Xoá hết</button>
       </nav>
 
+      <details id="key-panel" class="panel">
+        <summary>Đáp án &amp; điểm</summary>
+        <div class="panel-body">
+          <label class="field">
+            <span>Đáp án theo mã đề</span>
+            <textarea id="key-text" rows="6" spellcheck="false" autocapitalize="characters"
+              placeholder="501 ADCBBADDAC DSDSSS SDSDDS ..."></textarea>
+          </label>
+          <p class="hint">
+            Mỗi dòng một mã đề: mã 3 số, rồi 40 ký tự — 10 đáp án A–D của phần I, tiếp là 30 ý
+            Đ/S của 5 câu phần II. Cách nhau bằng dấu cách tuỳ ý, chữ "Đ" hiểu là D.
+          </p>
+          <div class="fields">
+            <label class="field">
+              <span>Điểm mỗi câu phần I</span>
+              <input id="p1-weight" type="number" min="0" step="0.05" inputmode="decimal" />
+            </label>
+            <label class="field">
+              <span>Điểm mỗi câu phần II</span>
+              <input id="p2-weight" type="number" min="0" step="0.05" inputmode="decimal" />
+            </label>
+            <label class="field">
+              <span>Cách tính phần II</span>
+              <select id="p2-mode">
+                <option value="split">chia đều 6 ý</option>
+                <option value="all">đúng cả 6 ý mới có điểm</option>
+              </select>
+            </label>
+          </div>
+          <p id="key-status" class="hint" role="status"></p>
+        </div>
+      </details>
+
       <section class="results">
         <p id="status" class="status" role="status"></p>
         <div id="list" class="list"></div>

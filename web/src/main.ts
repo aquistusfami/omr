@@ -3,6 +3,7 @@ import { cameraSupported, grabFrame, startCamera, stopCamera, toThumbnail } from
 import { download, tableData, toCsv, toJson } from "./export";
 import { gradeSheet, type GradeResult } from "./grade";
 import { fromRgba } from "./image";
+import { DEFAULT_KEY, parseKeys, score, type KeyConfig } from "./key";
 import { Scanner } from "./scan";
 import * as store from "./store";
 import type { Template } from "./types";
@@ -22,6 +23,13 @@ const listEl = $<HTMLElement>("list");
 const countEl = $<HTMLElement>("count");
 const themeBtn = $<HTMLButtonElement>("theme");
 
+const keyPanel = $<HTMLDetailsElement>("key-panel");
+const keyText = $<HTMLTextAreaElement>("key-text");
+const p1Weight = $<HTMLInputElement>("p1-weight");
+const p2Weight = $<HTMLInputElement>("p2-weight");
+const p2Mode = $<HTMLSelectElement>("p2-mode");
+const keyStatus = $<HTMLParagraphElement>("key-status");
+
 const scanner = new Scanner();
 let stream: MediaStream | null = null;
 let running = false;
@@ -31,6 +39,54 @@ let lastAcceptAt = 0;
 let audio: AudioContext | null = null;
 
 $("template-name").textContent = `${tmpl.name} · ${tmpl.blocks ? Object.keys(tmpl.blocks).length : 0} khối ô`;
+
+/* ------------------------------------------------------------- answer key */
+
+const KEY_STORAGE = "omr:key:v1";
+
+function loadKeyConfig(): KeyConfig {
+  try {
+    const saved = JSON.parse(localStorage.getItem(KEY_STORAGE) ?? "null") as Partial<KeyConfig> | null;
+    if (!saved) return { ...DEFAULT_KEY };
+    return {
+      text: typeof saved.text === "string" ? saved.text : "",
+      p1: Number.isFinite(saved.p1) ? Number(saved.p1) : DEFAULT_KEY.p1,
+      p2: Number.isFinite(saved.p2) ? Number(saved.p2) : DEFAULT_KEY.p2,
+      mode: saved.mode === "all" ? "all" : "split",
+    };
+  } catch {
+    return { ...DEFAULT_KEY };
+  }
+}
+
+let keyCfg = loadKeyConfig();
+let keys = parseKeys(keyCfg.text).keys;
+
+function saveKeyConfig(): void {
+  try {
+    localStorage.setItem(KEY_STORAGE, JSON.stringify(keyCfg));
+  } catch {
+    /* private mode: the key still works for this session */
+  }
+}
+
+function showKeyStatus(): void {
+  const { errors } = parseKeys(keyCfg.text);
+  const codes = Object.keys(keys).length;
+  keyStatus.textContent = errors.length
+    ? errors.slice(0, 3).join(" · ")
+    : codes
+      ? `${codes} mã đề · ${keyCfg.p1}đ/câu I · ${keyCfg.p2}đ/câu II (${
+          keyCfg.mode === "all" ? "đúng cả 6 ý" : "chia đều 6 ý"
+        })`
+      : "Chưa có đáp án — phiếu vẫn được đọc, chỉ chưa có điểm.";
+}
+
+function applyKeyConfig(): void {
+  keys = parseKeys(keyCfg.text).keys;
+  saveKeyConfig();
+  showKeyStatus();
+}
 
 /* ------------------------------------------------------------------- theme */
 
@@ -217,10 +273,17 @@ async function render(): Promise<void> {
   const bad = rows.filter((r) => !r.ok).length;
   const flagged = rows.filter((r) => r.ok && r.flags.length).length;
   const dup = rows.filter((r) => r.duplicate).length;
+  const hasKey = Object.keys(keys).length > 0;
+  const scored = rows.map((r) => score(r, keys, keyCfg)).filter((s) => s !== null);
+  const average = scored.length ? scored.reduce((a, s) => a + s.total, 0) / scored.length : 0;
 
   statusEl.textContent =
     `${rows.length} phiếu · ${flagged} có ô cần xem · ${bad} bị từ chối` +
-    (dup ? ` · ${dup} trùng mã SV` : "");
+    (dup ? ` · ${dup} trùng mã SV` : "") +
+    (scored.length ? ` · điểm TB ${average.toFixed(2)}` : "") +
+    (hasKey && scored.length < rows.length
+      ? ` · ${rows.length - scored.length} chưa có đáp án/điểm`
+      : "");
 
   const total = String(rows.length);
   if (countEl.textContent !== total) {
@@ -240,12 +303,14 @@ async function render(): Promise<void> {
     ...recentRows.map((r) => {
       const row = document.createElement("article");
       row.className = "row" + (r.ok ? "" : " rejected");
+      const s = score(r, keys, keyCfg);
       row.innerHTML = `
         <div class="row-head">
           <strong>${r.studentId || "?"}</strong>
           <span class="muted">đề ${r.examCode || "?"}</span>
           ${r.duplicate ? `<span class="dup">trùng</span>` : ""}
           <time class="muted">${new Date(r.at).toLocaleTimeString("vi-VN")}</time>
+          ${hasKey ? `<span class="score">${s ? s.total.toFixed(2) : "—"}</span>` : ""}
         </div>
         <div class="answers">${
           r.ok
@@ -277,13 +342,40 @@ async function exportAs(kind: "csv" | "xlsx" | "json"): Promise<void> {
     statusEl.textContent = "Chưa có phiếu nào để xuất.";
     return;
   }
-  const table = tableData(rows, tmpl);
+  const scoring = { keys, cfg: keyCfg };
+  const table = tableData(rows, tmpl, scoring);
   if (kind === "csv") download(`ket-qua-${stamp()}.csv`, toCsv(table));
-  if (kind === "json") download(`ket-qua-${stamp()}.json`, toJson(rows, tmpl));
+  if (kind === "json") download(`ket-qua-${stamp()}.json`, toJson(rows, tmpl, scoring));
   if (kind === "xlsx") download(`ket-qua-${stamp()}.xlsx`, toXlsx(table.head, table.body));
 }
 
 /* ------------------------------------------------------------------ wires */
+
+keyText.value = keyCfg.text;
+p1Weight.value = String(keyCfg.p1);
+p2Weight.value = String(keyCfg.p2);
+p2Mode.value = keyCfg.mode;
+showKeyStatus();
+// an empty key is the first thing to fill in, so open the panel for it
+keyPanel.open = !Object.keys(keys).length;
+
+let keyTimer = 0;
+function keyChanged(): void {
+  keyCfg = {
+    text: keyText.value,
+    p1: Number(p1Weight.value) || 0,
+    p2: Number(p2Weight.value) || 0,
+    mode: p2Mode.value === "all" ? "all" : "split",
+  };
+  applyKeyConfig();
+  clearTimeout(keyTimer);
+  keyTimer = window.setTimeout(() => void render(), 300);
+}
+
+keyText.addEventListener("input", keyChanged);
+p1Weight.addEventListener("input", keyChanged);
+p2Weight.addEventListener("input", keyChanged);
+p2Mode.addEventListener("change", keyChanged);
 
 $("auto").addEventListener("click", () => void startAuto());
 $("manual").addEventListener("click", () => {

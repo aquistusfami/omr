@@ -103,7 +103,10 @@ python3 tools/make_fixtures.py --count 30 --out /tmp/sheets   # để đo độ 
 6. Chữ trong UI là tiếng Việt; comment và tên biến là tiếng Anh.
 7. **Mỗi phiếu chỉ được ghi một lần.** `Scanner` chỉ nhận sau hai lần đọc khớp nhau và chỉ nhận
    lại khi phiếu đã được nhấc ra. Đừng bỏ cơ chế này — nó là thứ chặn 1 phiếu thành 20 dòng.
-8. **"Đã nhận" nghĩa là đã ghi xong**: `store.add()` chỉ resolve sau khi transaction commit.
+8. **Điểm không nằm trong bản ghi.** `SheetRecord` chỉ có đáp án đã đọc; điểm tính lại từ
+   `key.ts` mỗi lần xem/xuất. Sửa đáp án là mọi con số đổi theo, không có dữ liệu cũ lẫn vào.
+   Đáp án + trọng số lưu ở localStorage `omr:key:v1`, file JSON xuất kèm `key` để tái lập được.
+9. **"Đã nhận" nghĩa là đã ghi xong**: `store.add()` chỉ resolve sau khi transaction commit.
    Đừng đổi thành ghi rồi trả về ngay, người dùng sẽ nhấc phiếu khi dữ liệu chưa xuống đĩa.
 
 ## Cách kiểm tra một thay đổi

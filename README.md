@@ -13,7 +13,11 @@ Giao diện là một bảng đọc: trạng thái chiếm cả bề ngang và �
 góc trên, có theme sáng/tối. Mọi thứ khác nằm dưới màn hình đầu. Xem [DESIGN.md](DESIGN.md).
 
 Kết quả lưu trong IndexedDB của điện thoại (kèm ảnh phiếu đã nắn phẳng để đối chiếu), xuất được
-**CSV**, **Excel (.xlsx)** và **JSON**.
+**CSV**, **Excel (.xlsx)** và **JSON** — có sẵn cột **điểm**.
+
+**Đáp án & điểm**: mở mục "Đáp án & điểm" ngay trên danh sách, dán đáp án theo mã đề (mỗi dòng một
+mã), chọn trọng số. Điểm được tính lại mỗi lần xem/xuất, không lưu vào từng phiếu — sửa đáp án là
+toàn bộ kết quả đổi theo.
 
 Dùng cho phiếu 15 câu hiện có (`fixtures/blank-form.png`): 240 ô tô, 9 chữ số mã sinh viên,
 3 chữ số mã đề, PHẦN I 10 câu A–D, PHẦN II 5 câu × 6 ý Đúng/Sai.
@@ -72,7 +76,7 @@ Cập nhật 2026-10-24. Chi tiết và tiêu chí nghiệm thu: [docs/06-roadma
 | M2 — sửa ô ngay trong app | ⬜ |
 | M3 — nắn theo từng khối (phiếu cong) | ⬜ |
 | M4 — chặn trùng, xoá ảnh theo lô | 🟡 đã đánh dấu trùng, chưa chặn |
-| M5 — nhập đáp án, tính điểm, phổ điểm | ⬜ |
+| M5 — nhập đáp án, tính điểm, phổ điểm | 🟡 nhập đáp án + điểm (chia đều 6 ý hoặc đúng cả 6 ý); chưa có phổ điểm |
 | M6 — PWA offline, gộp nhiều điện thoại | ⬜ |
 
 **Đã đọc được phiếu thật.** Bộ 57 tờ scan A4 (ảnh 150 dpi, 1240×1754): 57/57 nhận, dùng 15–21
@@ -91,10 +95,12 @@ gradient trên–dưới và nét bút chì nhạt (đúng ba thứ đã làm h�
 2. **Chạy thử trên điện thoại thật** (~5 phút): mở https, cấp quyền camera, đặt 3–5 phiếu đã tô,
    kiểm tra bíp + banner xanh + nhấc phiếu ra mới nhận phiếu tiếp. Đây là phần chưa được kiểm
    chứng — máy phát triển không có trình duyệt.
-3. **M1**: chấm tay 50 trong 57 tờ đã có (hoặc chụp thêm), so từng ô, đo 4 con số (ô sai, tỉ lệ
+3. **Nhập đáp án** trước khi chấm (mục "Đáp án & điểm"): mỗi mã đề một dòng 40 ký tự. Không có
+   đáp án thì phiếu vẫn được đọc và xuất, chỉ trống cột điểm.
+4. **M1**: chấm tay 50 trong 57 tờ đã có (hoặc chụp thêm), so từng ô, đo 4 con số (ô sai, tỉ lệ
    từ chối, tỉ lệ cờ, giây/phiếu). Không đạt thì chỉnh ngưỡng trong `classify()` / `classifyColumn()`
    rồi đo lại.
-4. Đạt M1 mới chấm 500 phiếu thật; sau đó mới làm M2 (sửa tay trong app) — nó là khoảng trống
+5. Đạt M1 mới chấm 500 phiếu thật; sau đó mới làm M2 (sửa tay trong app) — nó là khoảng trống
    giữa "có file Excel" và "quy trình khép kín".
 
 ## Điều kiện để chấm đúng
