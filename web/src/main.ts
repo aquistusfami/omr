@@ -312,8 +312,8 @@ async function render(): Promise<void> {
           <span class="muted">đề ${r.examCode || "?"}</span>
           ${r.duplicate ? `<span class="dup">trùng</span>` : ""}
           <time class="muted">${new Date(r.at).toLocaleTimeString("vi-VN")}</time>
-          ${hasKey ? `<span class="score">${s ? s.total.toFixed(2) : "—"}</span>` : ""}
         </div>
+        ${hasKey ? `<span class="score">${s ? s.total.toFixed(2) : "—"}</span>` : ""}
         <div class="answers">${
           r.ok
             ? [...Object.entries(r.p1).map(([q, v]) => `${q}${v || "·"}`),

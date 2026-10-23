@@ -51,6 +51,7 @@ Mỗi phiếu ~8–10 giây.
 1. Xuất lần cuối — chọn định dạng:
    - **CSV**: mở bằng Excel/Google Sheets, mỗi phiếu một dòng.
    - **Excel** (.xlsx): mở thẳng, không cần import, giữ nguyên số 0 đầu của mã sinh viên.
+   - Cột `thoi_gian` ghi theo **giờ của điện thoại** (không phải UTC), dạng `2026-05-16 10:31:05`.
    - **JSON**: bản đầy đủ để lưu trữ hoặc đưa sang công cụ khác.
 2. Lọc cột `can_kiem_tra` khác rỗng. Mỗi dòng là một phiếu cần xem:
    - `cau7:multi` — tô nhiều ô ở câu 7 (hoặc có mực nhưng không phân biệt được).

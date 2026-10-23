@@ -54,11 +54,13 @@ tabular-nums` để bộ đếm không nhảy bề ngang.
 - `.rail` — 56 px, tên app trái, bộ đếm + nút theme phải, kẻ 1 px dưới.
 - `.stage` — khung ngắm, nền `#0a0d0a` ở cả hai theme, `aspect-ratio` lấy từ luồng video thật,
   viền trong 3 px mang màu trạng thái (`box-shadow: inset`), khung nét đứt là gợi ý vị trí phiếu.
-- `.banner` — dải trạng thái, cao tối thiểu 84 px, chữ căn giữa, nền `--state-wash`.
+- `.banner` — dải trạng thái, cao tối thiểu 84 px, chữ căn giữa, nền `--state-wash`, kẻ 1 px
+  `--line`. Ở trạng thái `wait` nền là `--surface` để dải vẫn đọc ra là một khối, không phải chữ trôi.
 - `.last` — một dòng chi tiết phiếu vừa nhận (MSV · đề · số ô cần xem · trùng).
 - `.controls` — hai nút 52 px chia đôi bề ngang; nút đang bật có chấm tròn `::before`.
 - `.utility` — bốn hành động nhỏ kiểu chữ có gạch chân mảnh; "Xoá hết" đẩy sang phải, chỉ đỏ khi hover.
-- `.row` — hàng dữ liệu, không phải card: kẻ 1 px trên/dưới, không bo góc, không nền.
+- `.row` — hàng dữ liệu, không phải card: kẻ 1 px trên/dưới, không bo góc, không nền. Lưới ba cột
+  `1fr auto auto`: đầu hàng (MSV · đề · giờ) | điểm | nút xoá, nên điểm luôn thẳng cột dù đầu hàng dài.
 - `.panel` — `<details>` gấp lại được cho "Đáp án & điểm": một đường viền 14 px, không đổ bóng,
   phần thân là lưới 1 cột; ô nhập dùng `--ground` để tách khỏi nền `--surface`.
 - `.score` — điểm của phiếu, đẩy sang phải hàng dữ liệu, chữ đậm + số tabular.
@@ -72,7 +74,7 @@ Một nhịp duy nhất: `cubic-bezier(0.16, 1, 0.3, 1)`, 180 ms cho màu nền/
 
 ## Trạng thái
 
-`body[data-state]` là nguồn duy nhất: `wait` (mặc định, không tô), `ok`, `bad`. CSS suy ra màu dải,
+`body[data-state]` là nguồn duy nhất: `wait` (mặc định, nền `--surface`), `ok`, `bad`. CSS suy ra màu dải,
 viền khung và màu chữ từ đó, nên chỉ cần đổi một thuộc tính khi logic đổi trạng thái.
 
 Nhãn cố định: "Đưa phiếu vào khung" · "Đang đọc…" · "Đã nhận — nhấc phiếu ra" ·
@@ -80,5 +82,6 @@ Nhãn cố định: "Đưa phiếu vào khung" · "Đang đọc…" · "Đã nh�
 
 ## Chưa làm
 
-- Chưa có ảnh chụp màn hình thật (máy phát triển không có trình duyệt); mọi kiểm tra là tĩnh.
+- Chưa chụp trên điện thoại thật. Giao diện đã được dựng bằng Firefox headless ở 360×844 và
+  390×844, cả hai theme, với dữ liệu mẫu — đủ để bắt lỗi bố cục, chưa đủ để nói về cảm giác trên máy.
 - `.impeccable/design.json` chưa ghi; token ở trên và trong `styles.css` là nguồn duy nhất.

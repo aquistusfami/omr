@@ -8,6 +8,13 @@ export interface Scoring {
   cfg: KeyConfig;
 }
 
+/** Local wall-clock time: the teacher reads the sheet time, not UTC. */
+function stamp(at: number): string {
+  const d = new Date(at);
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+}
+
 export interface Table {
   head: string[];
   body: string[][];
@@ -37,7 +44,7 @@ export function tableData(rows: SheetRecord[], tmpl: Template, scoring?: Scoring
     const s: Score | null = scoring ? score(r, scoring.keys, scoring.cfg) : null;
     return [
     String(i + 1),
-    new Date(r.at).toISOString(),
+    stamp(r.at),
     r.studentId,
     r.examCode,
     ...questions.map((q) => r.p1[q.replace("cau", "")] ?? ""),

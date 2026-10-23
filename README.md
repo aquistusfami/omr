@@ -70,7 +70,7 @@ Cập nhật 2026-10-24. Chi tiết và tiêu chí nghiệm thu: [docs/06-roadma
 | Chụp thủ công (input file) khi không có camera | ✅ |
 | Lưu IndexedDB: kết quả + ảnh phiếu 900 px | ✅ |
 | Xuất CSV / Excel (.xlsx) / JSON | ✅ |
-| Thiết kế lại giao diện (máy đo, 2 theme, dải trạng thái) | ✅ code, **chưa xem trên màn hình thật** |
+| Thiết kế lại giao diện (máy đo, 2 theme, dải trạng thái) | ✅ đã dựng ở 360/390 px, cả 2 theme |
 | CI: type check, test, build, template, mở file xlsx | ✅ |
 | Deploy GitHub Pages (https cho camera) | 🟠 chờ bật Pages trong Settings |
 | **M1 — đo độ chính xác trên 50 phiếu chấm tay** | 🔴 **việc tiếp theo** |
@@ -94,8 +94,8 @@ gradient trên–dưới và nét bút chì nhạt (đúng ba thứ đã làm h�
 
 1. **Bật Pages** (Settings → Pages → Source: GitHub Actions) rồi chạy lại job `deploy` — 1 phút.
 2. **Chạy thử trên điện thoại thật** (~5 phút): mở https, cấp quyền camera, đặt 3–5 phiếu đã tô,
-   kiểm tra bíp + banner xanh + nhấc phiếu ra mới nhận phiếu tiếp. Đây là phần chưa được kiểm
-   chứng — máy phát triển không có trình duyệt.
+   kiểm tra bíp + banner xanh + nhấc phiếu ra mới nhận phiếu tiếp. Bố cục đã dựng bằng trình
+   duyệt headless; phần chưa kiểm chứng là camera và quyền truy cập trên máy thật.
 3. **Nhập đáp án** trước khi chấm (mục "Đáp án & điểm"): mỗi mã đề một dòng 40 ký tự. Không có
    đáp án thì phiếu vẫn được đọc và xuất, chỉ trống cột điểm.
 4. **M1**: chấm tay 50 trong 57 tờ đã có (hoặc chụp thêm), so từng ô, đo 4 con số (ô sai, tỉ lệ
