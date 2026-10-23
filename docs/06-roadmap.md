@@ -83,8 +83,9 @@ Tiêu chí: khiếu nại một phiếu bất kỳ, mở được ảnh trong <2
 Đã làm:
 
 - Dán đáp án theo mã đề vào mục "Đáp án & điểm" (mỗi dòng 40 ký tự), lưu ở localStorage.
-- Hai thang: phần I mỗi câu đúng = trọng số; phần II chia đều 6 ý **hoặc** đúng cả 6 ý mới có điểm.
-- Cột `diem`, `dung_p1`, `dung_p2` trong CSV/XLSX; điểm TB trên dòng trạng thái.
+- Mặc định thang của trường: 2 điểm/câu, đúng 100% mới có điểm (phần II: cả 6 ý), tổng 30.
+  Vẫn đổi được sang chia đều 6 ý nếu môn khác cần.
+- Cột `diem`, `dung_p1`, `dung_p2` trong CSV/XLSX; điểm TB dạng `18.40/30` trên dòng trạng thái.
 - Điểm tính lại từ đáp án mỗi lần xem/xuất, không lưu vào bản ghi.
 
 Còn thiếu: phổ điểm / thống kê theo lớp, và thang điểm lẻ kiểu Bộ (0.1/0.25/0.5/1.0 theo số ý

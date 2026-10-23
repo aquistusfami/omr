@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { parseKeys, score, type KeyConfig } from "../src/key";
+import { DEFAULT_KEY, parseKeys, score, type KeyConfig } from "../src/key";
 import type { SheetRecord } from "../src/store";
 
 const KEY_TEXT = "501 ADCBBADDAC DSDSSS SDSDDS SDSDSD DSSDSS DDSDDS";
@@ -62,6 +62,17 @@ describe("score", () => {
   it("gives full marks for a perfect sheet", () => {
     const s = score(perfect, keys, cfg())!;
     expect(s).toMatchObject({ p1: 2.5, p2: 2.5, total: 5, correctP1: 10, correctP2: 30 });
+  });
+
+  it("matches the school scale: 2 points per question, 30 in total, all or nothing", () => {
+    expect(score(perfect, keys, DEFAULT_KEY)!.total).toBe(30);
+    // one statement wrong in question 15 costs the whole 2 points
+    const s = score(
+      sheet({ p1: "ADCBBADDAC", p2: ["DSDSSS", "SDSDDS", "SDSDSD", "DSSDSS", "DDSDD"] }),
+      keys,
+      DEFAULT_KEY,
+    )!;
+    expect(s.total).toBe(28);
   });
 
   it("counts a wrong choice and a wrong statement", () => {

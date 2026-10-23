@@ -22,7 +22,9 @@ export interface Score {
   correctP2: number;
 }
 
-export const DEFAULT_KEY: KeyConfig = { text: "", p1: 0.25, p2: 0.5, mode: "split" };
+// Trường dùng thang 2 điểm/câu, phải đúng 100% câu mới có điểm: 10 câu phần I
+// và 5 câu phần II (cả 6 ý) = 30 điểm.
+export const DEFAULT_KEY: KeyConfig = { text: "", p1: 2, p2: 2, mode: "all" };
 
 /**
  * One line per exam code, pasted straight from whatever the teacher already has:

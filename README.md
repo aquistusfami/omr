@@ -16,8 +16,9 @@ Kết quả lưu trong IndexedDB của điện thoại (kèm ảnh phiếu đã 
 **CSV**, **Excel (.xlsx)** và **JSON** — có sẵn cột **điểm**.
 
 **Đáp án & điểm**: mở mục "Đáp án & điểm" ngay trên danh sách, dán đáp án theo mã đề (mỗi dòng một
-mã), chọn trọng số. Điểm được tính lại mỗi lần xem/xuất, không lưu vào từng phiếu — sửa đáp án là
-toàn bộ kết quả đổi theo.
+mã). Thang mặc định: **2 điểm/câu, đúng 100% mới có điểm** (phần II tính cả 6 ý), tổng 30 điểm.
+Điểm được tính lại mỗi lần xem/xuất, không lưu vào từng phiếu — sửa đáp án là toàn bộ kết quả đổi
+theo.
 
 Dùng cho phiếu 15 câu hiện có (`fixtures/blank-form.png`): 240 ô tô, 9 chữ số mã sinh viên,
 3 chữ số mã đề, PHẦN I 10 câu A–D, PHẦN II 5 câu × 6 ý Đúng/Sai.
@@ -76,7 +77,7 @@ Cập nhật 2026-10-24. Chi tiết và tiêu chí nghiệm thu: [docs/06-roadma
 | M2 — sửa ô ngay trong app | ⬜ |
 | M3 — nắn theo từng khối (phiếu cong) | ⬜ |
 | M4 — chặn trùng, xoá ảnh theo lô | 🟡 đã đánh dấu trùng, chưa chặn |
-| M5 — nhập đáp án, tính điểm, phổ điểm | 🟡 nhập đáp án + điểm (chia đều 6 ý hoặc đúng cả 6 ý); chưa có phổ điểm |
+| M5 — nhập đáp án, tính điểm, phổ điểm | 🟡 2đ/câu, đúng 100% mới có điểm (tổng 30); chưa có phổ điểm |
 | M6 — PWA offline, gộp nhiều điện thoại | ⬜ |
 
 **Đã đọc được phiếu thật.** Bộ 57 tờ scan A4 (ảnh 150 dpi, 1240×1754): 57/57 nhận, dùng 15–21

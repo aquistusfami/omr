@@ -280,7 +280,9 @@ async function render(): Promise<void> {
   statusEl.textContent =
     `${rows.length} phiếu · ${flagged} có ô cần xem · ${bad} bị từ chối` +
     (dup ? ` · ${dup} trùng mã SV` : "") +
-    (scored.length ? ` · điểm TB ${average.toFixed(2)}` : "") +
+    (scored.length
+      ? ` · điểm TB ${average.toFixed(2)}/${(10 * keyCfg.p1 + 5 * keyCfg.p2).toFixed(0)}`
+      : "") +
     (hasKey && scored.length < rows.length
       ? ` · ${rows.length - scored.length} chưa có đáp án/điểm`
       : "");

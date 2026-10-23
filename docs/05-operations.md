@@ -15,8 +15,9 @@ Dành cho người chấm, không cần biết code.
    dùng "Chụp thủ công" (vẫn chấm được, chỉ chậm hơn).
 5. **Nhập đáp án** (mục "Đáp án & điểm", mở sẵn khi chưa có đáp án): mỗi mã đề một dòng, gồm mã
    3 số rồi 40 ký tự — 10 đáp án A–D phần I, tiếp 30 ý Đ/S phần II. Dán thẳng từ Excel được (dấu
-   tab, dấu cách, chữ thường, "Đ" đều nhận). Chọn trọng số điểm; mặc định 0.25đ/câu I và 0.5đ/câu
-   II chia đều 6 ý. Không có đáp án thì vẫn chấm và xuất được, chỉ trống cột điểm.
+   tab, dấu cách, chữ thường, "Đ" đều nhận). Mặc định đúng thang của trường: **2 điểm/câu, phải đúng 100% mới có điểm** (phần
+   II là cả 6 ý), tổng 30 điểm. Vẫn sửa được trọng số nếu môn khác dùng thang khác. Không có đáp
+   án thì vẫn chấm và xuất được, chỉ trống cột điểm.
 6. **Chạy thử 10 phiếu** đã tô sẵn, có đáp án biết trước. Nếu sai một ô nào, dừng lại: xem
    `docs/03-pipeline.md` mục "Chế độ hỏng đã biết" trước khi chấm thật.
 7. Cắm sạc hoặc mang pin dự phòng. Chấm 500 phiếu liên tục rất tốn pin và màn hình sáng.
