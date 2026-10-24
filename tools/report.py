@@ -15,6 +15,7 @@ import argparse
 import json
 import statistics
 import sys
+import zipfile
 from datetime import datetime
 from pathlib import Path
 
@@ -185,22 +186,43 @@ def write_xlsx(path: Path, rows: list[dict], key: dict) -> None:
     wb.save(path)
 
 
+def unpack(source: Path, out: Path) -> Path:
+    """A .zip exported from the phone is unpacked next to the report, so the
+    thumbnail paths written into the "Nghi van" sheet stay valid."""
+    if not source.is_file():
+        return source
+    dest = out.parent / f"{out.stem}-data"
+    with zipfile.ZipFile(source) as z:
+        for name in z.namelist():
+            parts = Path(name).parts
+            if name.startswith("/") or ".." in parts:
+                continue  # never write outside dest
+            if not (name.endswith((".jsonl", ".json")) or name.startswith("thumbs/")):
+                continue
+            target = dest / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(z.read(name))
+    return dest
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Tao bao cao Excel tu thu muc du lieu cua hub")
-    ap.add_argument("--dir", default=str(ROOT / "data" / "omr"), help="thu muc du lieu (mac dinh data/omr)")
+    ap.add_argument("--dir", default=str(ROOT / "data" / "omr"), help="thu muc du lieu hoac file .zip xuat tu dien thoai")
     ap.add_argument("-o", "--out", default=None, help="file xlsx dau ra")
     args = ap.parse_args()
 
-    data = Path(args.dir).expanduser().resolve()
-    if not data.exists():
-        print(f"Khong tim thay thu muc: {data}", file=sys.stderr)
+    source = Path(args.dir).expanduser().resolve()
+    if not source.exists():
+        print(f"Khong tim thay: {source}", file=sys.stderr)
         return 2
+
+    out = Path(args.out) if args.out else source / "bao-cao.xlsx"
+    data = unpack(source, out)
     rows, key = load(data)
     if not rows:
         print(f"Chua co phieu nao trong {data}/sheets.jsonl", file=sys.stderr)
         return 2
 
-    out = Path(args.out) if args.out else data / "bao-cao.xlsx"
     try:
         write_xlsx(out, rows, key)
     except ImportError:

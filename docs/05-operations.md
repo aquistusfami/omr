@@ -66,7 +66,9 @@ Mỗi phiếu ~8–10 giây.
 
 ## Sau khi chấm xong
 
-0. **Nếu chấm qua hub**: kiểm tra dòng trạng thái ghi `đã gửi N/N` bằng đúng số phiếu. Trên máy
+0. **Xuất gói lưu trữ** (làm dù có hub hay không): bấm **Gói .zip**, gửi sang máy tính. File này
+   chứa toàn bộ kết quả + đáp án + ảnh phiếu; mất điện thoại cũng không mất buổi chấm.
+0b. **Nếu chấm qua hub**: kiểm tra dòng trạng thái ghi `đã gửi N/N` bằng đúng số phiếu. Trên máy
    tính chạy `python3 tools/report.py` để ra `data/omr/bao-cao.xlsx` (4 sheet: danh sách, phổ
    điểm, theo mã đề, nghi vấn kèm đường dẫn ảnh). Không cần bước xuất file trên điện thoại.
    Sau khi đã có báo cáo, bấm **Xoá hết** trên điện thoại nếu không cần giữ bản phụ.

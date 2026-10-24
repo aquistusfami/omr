@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import { toXlsx } from "../src/xlsx";
+import { encoder, makeZip } from "../src/zip";
 
 /** Read the stored (uncompressed) entries back out of our own zip. */
 function unzip(bytes: Uint8Array): Map<string, string> {
@@ -60,5 +61,15 @@ describe("toXlsx", () => {
     const blob = toXlsx(["a"], [['x & <y> "z"']]);
     const sheet = unzip(new Uint8Array(await blob.arrayBuffer())).get("xl/worksheets/sheet1.xml")!;
     expect(sheet).toContain("x &amp; &lt;y&gt; &quot;z&quot;");
+  });
+
+  it("makeZip keeps binary entries and nested paths", async () => {
+    const blob = makeZip([
+      { name: "thumbs/abc.jpg", data: new Uint8Array([0xff, 0xd8, 0xff, 0x00]) },
+      { name: "sheets.jsonl", data: encoder.encode('{"a":1}\n') },
+    ]);
+    const files = unzip(new Uint8Array(await blob.arrayBuffer()));
+    expect([...files.keys()]).toEqual(["thumbs/abc.jpg", "sheets.jsonl"]);
+    expect(files.get("sheets.jsonl")).toBe('{"a":1}\n');
   });
 });

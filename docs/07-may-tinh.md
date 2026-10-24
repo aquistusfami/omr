@@ -123,13 +123,34 @@ Giả định: 500 phiếu là dữ liệu cá nhân của học sinh, không đ
 riêng hoặc xoá theo quy định của trường; trên điện thoại bấm **Xoá hết** sau khi đã xác
 nhận `đã gửi N/N`.
 
-## 6. Khi không có máy tính
+## 6. LAN không dùng được: xuất gói .zip
+
+Không phải lúc nào điện thoại cũng thấy được máy tính (wifi trường bật cách ly thiết bị, dùng
+4G, hoặc trình duyệt trong app chat từ chối chứng chỉ tự ký). Khi đó bỏ hub, dùng gói:
+
+1. Trên điện thoại bấm **Gói .zip** (hàng nút dưới nút quét). File `omr-2026-10-24.zip` chứa
+   `sheets.jsonl`, `key.json` và `thumbs/<uid>.jpg` — **đủ để làm báo cáo, kèm cả ảnh phiếu**.
+2. Gửi file sang máy tính bằng cách bạn thích (Zalo, Drive, AirDrop, cáp). Nút này dùng bảng
+   chia sẻ của hệ điều hành nếu có, không thì tải xuống.
+3. Trên máy tính:
+
+```bash
+python3 tools/report.py --dir omr-2026-10-24.zip -o bao-cao.xlsx
+```
+
+`report.py` tự giải nén cạnh file báo cáo (thư mục `bao-cao-data/`) để đường dẫn ảnh trong sheet
+`Danh sach`... `Nghi van` vẫn mở được.
+
+Gói này cũng là **bản lưu trữ** của một buổi chấm: một file, mở được bằng `unzip`, không phụ
+thuộc app hay database của điện thoại. Nên xuất cuối mỗi buổi dù có dùng hub hay không.
+
+## 7. Khi không có máy tính
 
 App vẫn chạy độc lập (mở từ GitHub Pages hoặc `npm run dev`) và lưu trong điện thoại.
 Khi đó dùng **CSV / Excel / JSON** trong hàng nút để mang dữ liệu đi, và không có
 `report.py`. Panel "Gửi về máy tính" tự ẩn khi trang không được phục vụ bởi hub.
 
-## 7. Giới hạn đã biết
+## 8. Giới hạn đã biết
 
 - Điện thoại phải **cùng wifi** với máy tính. Nhiều router bật "client isolation" (cách ly
   thiết bị) hoặc tách băng tần 2.4/5 GHz thành hai mạng — khi đó điện thoại không thấy máy

@@ -139,8 +139,12 @@ python3 tools/report.py                    # data/omr/bao-cao.xlsx
 ```
 
 Chi tiết, cơ chế đồng bộ và **những gì được/không được bảo vệ**: [docs/07-may-tinh.md](docs/07-may-tinh.md).
-Điện thoại không mở được link thì kiểm tra: cùng wifi (không phải 4G), router không bật cách ly
-thiết bị (client isolation), và bấm qua cảnh báo chứng chỉ.
+Điện thoại không mở được link thì kiểm tra theo thứ tự: **dán link vào Chrome/Safari** (trình
+duyệt trong Zalo/Messenger thường từ chối chứng chỉ tự ký), cùng wifi (không phải 4G), router
+không bật cách ly thiết bị, và bấm qua cảnh báo chứng chỉ.
+
+Không dùng được LAN thì vẫn có đường khác: bấm **Gói .zip** trên điện thoại, gửi file sang máy
+tính, rồi `python3 tools/report.py --dir omr-2026-10-24.zip`. Gói chứa cả đáp án và ảnh phiếu.
 
 ## Công cụ
 

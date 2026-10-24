@@ -2,6 +2,7 @@ import templateJson from "../../fixtures/template.json";
 import { findAnchors } from "./anchors";
 import { cameraSupported, grabFrame, startCamera, stopCamera, toThumbnail } from "./capture";
 import { download, tableData, toCsv, toJson } from "./export";
+import { makeZip, encoder } from "./zip";
 import { gradeSheet, type GradeResult } from "./grade";
 import { fromRgba } from "./image";
 import { DEFAULT_KEY, parseKeys, score, type KeyConfig } from "./key";
@@ -456,6 +457,45 @@ function stamp(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+/**
+ * One file that carries everything the computer needs: records, answer key and
+ * the sheet thumbnails. Works with no network - share it or let it download.
+ */
+async function exportPackage(): Promise<void> {
+  const rows = await store.all();
+  if (!rows.length) {
+    statusEl.textContent = "Chưa có phiếu nào để xuất.";
+    return;
+  }
+  const lines = rows.map((r) => JSON.stringify(r)).join("\n");
+  const entries = [
+    { name: "sheets.jsonl", data: encoder.encode(lines + "\n") },
+    { name: "key.json", data: encoder.encode(JSON.stringify({ cfg: keyCfg, keys }, null, 2)) },
+  ];
+  for (const r of rows) {
+    if (!r.id || !r.uid) continue;
+    const thumb = await store.thumb(r.id);
+    if (thumb) entries.push({ name: `thumbs/${r.uid}.jpg`, data: new Uint8Array(await thumb.arrayBuffer()) });
+  }
+  const name = `omr-${stamp()}.zip`;
+  const file = new File([makeZip(entries)], name, { type: "application/zip" });
+  const share = navigator as Navigator & {
+    canShare?: (data: ShareData) => boolean;
+    share?: (data: ShareData) => Promise<void>;
+  };
+  if (share.canShare?.({ files: [file] }) && share.share) {
+    try {
+      await share.share({ files: [file], title: "Kết quả chấm" });
+      statusEl.textContent = `Đã chia sẻ ${name} (${rows.length} phiếu).`;
+      return;
+    } catch {
+      /* user cancelled the share sheet: fall through to a plain download */
+    }
+  }
+  download(name, file);
+  statusEl.textContent = `Đã tạo ${name} (${rows.length} phiếu).`;
+}
+
 async function exportAs(kind: "csv" | "xlsx" | "json"): Promise<void> {
   const rows = await store.all();
   if (!rows.length) {
@@ -529,7 +569,7 @@ fileInput.addEventListener("change", () => {
 });
 $("csv").addEventListener("click", () => void exportAs("csv"));
 $("xlsx").addEventListener("click", () => void exportAs("xlsx"));
-$("json").addEventListener("click", () => void exportAs("json"));
+$("json").addEventListener("click", () => void exportPackage());
 $("clear").addEventListener("click", async () => {
   if (!confirm("Xoá toàn bộ kết quả đã chấm?")) return;
   await store.clear();
