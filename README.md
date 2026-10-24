@@ -69,6 +69,8 @@ Cập nhật 2026-10-24. Chi tiết và tiêu chí nghiệm thu: [docs/06-roadma
 | Quét tự động trên giá cố định, chống nhận trùng một phiếu | ✅ code + test, đã sửa lỗi vòng lặp chết im lặng; **chưa chạy trên điện thoại thật** |
 | Chụp thủ công (input file) khi không có camera | ✅ |
 | Lưu IndexedDB: kết quả + ảnh phiếu 900 px | ✅ |
+| Hub nội bộ: điện thoại gửi phiếu về máy tính qua LAN (token + https) | ✅ code + test, xem [docs/07](docs/07-may-tinh.md) |
+| `tools/report.py`: Excel 4 sheet (danh sách, phổ điểm, theo mã đề, nghi vấn) | ✅ |
 | Xuất CSV / Excel (.xlsx) / JSON | ✅ |
 | Thiết kế lại giao diện (máy đo, 2 theme, dải trạng thái, gợi ý căn máy trong khung ngắm) | ✅ đã dựng ở 320/360/390 px + ngang, cả 2 theme |
 | CI: type check, test, build, template, mở file xlsx | ✅ |
@@ -93,6 +95,7 @@ gradient trên–dưới và nét bút chì nhạt (đúng ba thứ đã làm h�
 ## Việc tiếp theo
 
 1. **Bật Pages** (Settings → Pages → Source: GitHub Actions) rồi chạy lại job `deploy` — 1 phút.
+   Chỉ cần nếu muốn dùng app không kèm máy tính; repo private thì Pages không phục vụ.
 2. **Chạy thử trên điện thoại thật** (~5 phút): mở https, cấp quyền camera, đặt 3–5 phiếu đã tô,
    kiểm tra bíp + banner xanh + nhấc phiếu ra mới nhận phiếu tiếp. Bố cục đã dựng bằng trình
    duyệt headless; phần chưa kiểm chứng là camera và quyền truy cập trên máy thật.
@@ -123,10 +126,26 @@ gradient trên–dưới và nét bút chì nhạt (đúng ba thứ đã làm h�
 | [docs/04-sheet-layout.md](docs/04-sheet-layout.md) | bố cục phiếu, số ô, dấu góc, yêu cầu in |
 | [docs/05-operations.md](docs/05-operations.md) | quy trình chấm 500 phiếu trong buổi thi |
 | [docs/06-roadmap.md](docs/06-roadmap.md) | các mốc tiếp theo và tiêu chí nghiệm thu |
+| [docs/07-may-tinh.md](docs/07-may-tinh.md) | hub LAN trên máy tính, bảo mật, báo cáo Excel |
+
+## Chạy trên máy tính (khuyến nghị khi chấm thật)
+
+Điện thoại quét, máy tính giữ dữ liệu và làm báo cáo — cùng một wifi, không qua internet:
+
+```bash
+cd web && npm run build && npm run hub     # in ra link https://<ip>:8443/?t=...
+# mở link đó trên điện thoại, rồi trên máy tính:
+python3 tools/report.py                    # data/omr/bao-cao.xlsx
+```
+
+Chi tiết, cơ chế đồng bộ và **những gì được/không được bảo vệ**: [docs/07-may-tinh.md](docs/07-may-tinh.md).
 
 ## Công cụ
 
 `tools/` chỉ cần Python 3 + numpy/scipy/Pillow (máy này đã có). Không dùng OpenCV.
+`report.py` cần thêm openpyxl (`uv run --with openpyxl python3 tools/report.py`).
 
 - `build_template.py` — sinh `template.json` và ảnh overlay kiểm tra từ ảnh phiếu trống.
 - `make_fixtures.py` — sinh ảnh phiếu đã tô (nắn phối cảnh, sáng lệch, nhiễu) để test và đo độ chính xác.
+- `report.py` — đọc thư mục dữ liệu của hub, tính điểm theo `key.json`, xuất Excel 4 sheet.
+- `web/tools/hub.mjs` — máy chủ LAN: phục vụ app, nhận phiếu, ghi `data/omr/`.

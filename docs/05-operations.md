@@ -10,17 +10,21 @@ Dành cho người chấm, không cần biết code.
 3. **Giá đỡ điện thoại**: tripod/kẹp bàn 50–100k, hoặc chặn 4 cuốn sách. Điện thoại song song
    mặt bàn, cách phiếu **30–40 cm**, phiếu chiếm ~80% khung hình và **thấy đủ 4 dấu góc**.
    Điện thoại phải **cố định**: đây là điều kiện để chế độ quét tự động dùng được.
-4. **Mở web bằng https**, không phải http. Camera trình duyệt chỉ chạy trên https; lần đầu điện
+4. **Nếu có máy tính trong lớp**: bật hub trước (`cd web && npm run build && npm run hub`) rồi mở
+   đúng link `https://<ip>:8443/?t=...` trên điện thoại. Phiếu chấm xong nằm ngay trong
+   `data/omr/` trên máy tính; mất wifi cũng không mất phiếu (tự gửi lại). Xem
+   [docs/07-may-tinh.md](07-may-tinh.md). Không có máy tính thì bỏ qua bước này.
+5. **Mở web bằng https**, không phải http. Camera trình duyệt chỉ chạy trên https; lần đầu điện
    thoại sẽ cảnh báo chứng chỉ tự ký — bấm "Nâng cao" → "Vẫn tiếp tục". Nếu không mở được camera,
    dùng "Chụp thủ công" (vẫn chấm được, chỉ chậm hơn).
-5. **Nhập đáp án** (mục "Đáp án & điểm", mở sẵn khi chưa có đáp án): mỗi mã đề một dòng, gồm mã
+6. **Nhập đáp án** (mục "Đáp án & điểm", mở sẵn khi chưa có đáp án): mỗi mã đề một dòng, gồm mã
    3 số rồi 40 ký tự — 10 đáp án A–D phần I, tiếp 30 ý Đ/S phần II. Dán thẳng từ Excel được (dấu
    tab, dấu cách, chữ thường, "Đ" đều nhận). Mặc định đúng thang của trường: **2 điểm/câu, phải đúng 100% mới có điểm** (phần
    II là cả 6 ý), tổng 30 điểm. Vẫn sửa được trọng số nếu môn khác dùng thang khác. Không có đáp
    án thì vẫn chấm và xuất được, chỉ trống cột điểm.
-6. **Chạy thử 10 phiếu** đã tô sẵn, có đáp án biết trước. Nếu sai một ô nào, dừng lại: xem
+7. **Chạy thử 10 phiếu** đã tô sẵn, có đáp án biết trước. Nếu sai một ô nào, dừng lại: xem
    `docs/03-pipeline.md` mục "Chế độ hỏng đã biết" trước khi chấm thật.
-7. Cắm sạc hoặc mang pin dự phòng. Chấm 500 phiếu liên tục rất tốn pin và màn hình sáng.
+8. Cắm sạc hoặc mang pin dự phòng. Chấm 500 phiếu liên tục rất tốn pin và màn hình sáng.
 
 ## Trình tự chấm — quét tự động
 
@@ -62,7 +66,12 @@ Mỗi phiếu ~8–10 giây.
 
 ## Sau khi chấm xong
 
-1. Xuất lần cuối — chọn định dạng:
+0. **Nếu chấm qua hub**: kiểm tra dòng trạng thái ghi `đã gửi N/N` bằng đúng số phiếu. Trên máy
+   tính chạy `python3 tools/report.py` để ra `data/omr/bao-cao.xlsx` (4 sheet: danh sách, phổ
+   điểm, theo mã đề, nghi vấn kèm đường dẫn ảnh). Không cần bước xuất file trên điện thoại.
+   Sau khi đã có báo cáo, bấm **Xoá hết** trên điện thoại nếu không cần giữ bản phụ.
+
+1. Xuất lần cuối trên điện thoại — chỉ cần khi **không** dùng hub. Chọn định dạng:
    - **CSV**: mở bằng Excel/Google Sheets, mỗi phiếu một dòng.
    - **Excel** (.xlsx): mở thẳng, không cần import, giữ nguyên số 0 đầu của mã sinh viên.
    - Cột `thoi_gian` ghi theo **giờ của điện thoại** (không phải UTC), dạng `2026-05-16 10:31:05`.

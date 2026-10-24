@@ -1,0 +1,52 @@
+{
+  "cfg": {
+    "text": "",
+    "p1": 2,
+    "p2": 2,
+    "mode": "all"
+  },
+  "keys": {
+    "501": {
+      "p1": [
+        "A",
+        "D",
+        "C",
+        "B",
+        "B",
+        "A",
+        "D",
+        "D",
+        "A",
+        "C"
+      ],
+      "p2": [
+        "DSDSSS",
+        "SDSDDS",
+        "SDSDSD",
+        "DSSDSS",
+        "DDSDDS"
+      ]
+    },
+    "511": {
+      "p1": [
+        "A",
+        "D",
+        "C",
+        "B",
+        "B",
+        "A",
+        "D",
+        "D",
+        "A",
+        "C"
+      ],
+      "p2": [
+        "DSDSSS",
+        "SDSDDS",
+        "SDSDSD",
+        "DSSDSS",
+        "DDSDDS"
+      ]
+    }
+  }
+}

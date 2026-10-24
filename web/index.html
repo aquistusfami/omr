@@ -104,6 +104,29 @@
         </div>
       </details>
 
+      <details id="hub-panel" class="panel" hidden>
+        <summary>Gửi về máy tính</summary>
+        <div class="panel-body">
+          <p class="hint">
+            Trang này đang chạy từ máy tính của bạn. Phiếu chấm xong được gửi ngay vào thư mục dữ
+            liệu trên máy — không qua mạng internet. Mất wifi thì phiếu vẫn nằm trong điện thoại và
+            tự gửi lại khi có kết nối.
+          </p>
+          <label class="field"
+            ><span>Mã kết nối</span
+            ><input
+              id="hub-token"
+              type="text"
+              autocapitalize="off"
+              autocomplete="off"
+              spellcheck="false"
+              placeholder="mã in ở cửa sổ trên máy tính"
+          /></label>
+          <button id="hub-connect" type="button">Kết nối</button>
+          <p id="hub-status" class="hint" role="status"></p>
+        </div>
+      </details>
+
       <section class="results">
         <p id="status" class="status" role="status"></p>
         <div id="list" class="list"></div>

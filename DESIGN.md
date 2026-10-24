@@ -65,8 +65,10 @@ tabular-nums` để bộ đếm không nhảy bề ngang.
 - `.utility` — bốn hành động nhỏ kiểu chữ có gạch chân mảnh; "Xoá hết" đẩy sang phải, chỉ đỏ khi hover.
 - `.row` — hàng dữ liệu, không phải card: kẻ 1 px trên/dưới, không bo góc, không nền. Lưới ba cột
   `1fr auto auto`: đầu hàng (MSV · đề · giờ) | điểm | nút xoá, nên điểm luôn thẳng cột dù đầu hàng dài.
-- `.panel` — `<details>` gấp lại được cho "Đáp án & điểm": một đường viền 14 px, không đổ bóng,
+- `.panel` — `<details>` gấp lại được cho "Đáp án & điểm" và "Gửi về máy tính": một đường viền 14 px, không đổ bóng,
   phần thân là lưới 1 cột; ô nhập dùng `--ground` để tách khỏi nền `--surface`.
+- `#hub-panel` chỉ hiện khi trang do hub phục vụ (`/api/health` trả JSON); khi mở từ GitHub Pages
+  hoặc file tĩnh thì ẩn hẳn. Ô "Mã kết nối" tự ẩn sau khi kết nối thành công.
 - `.score` — điểm của phiếu, đẩy sang phải hàng dữ liệu, chữ đậm + số tabular.
 
 Bán kính: 14 px cho nút và dải, 16 px cho khung ngắm, 10 px cho nút icon. Hàng dữ liệu bo 0.

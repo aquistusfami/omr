@@ -60,6 +60,20 @@ jobs:
           print("xlsx ok:", sheet.dimensions)
           PY
 
+      # report.py tính điểm theo key.json và xuất 4 sheet
+      - name: Báo cáo Excel từ dữ liệu mẫu
+        run: |
+          python3 tools/report.py --dir fixtures/sample-run -o "$RUNNER_TEMP/bao-cao.xlsx"
+          python3 - <<'PY'
+          import os, openpyxl
+          wb = openpyxl.load_workbook(os.path.join(os.environ["RUNNER_TEMP"], "bao-cao.xlsx"))
+          assert wb.sheetnames == ["Danh sach", "Phong diem", "Theo ma de", "Nghi van"], wb.sheetnames
+          ws = wb["Danh sach"]
+          assert (ws.max_row, ws.max_column) == (4, 49), ws.dimensions
+          assert ws["AS2"].value == 30, ws["AS2"].value  # cột điểm: phiếu đúng hết = 30
+          print("report ok:", ws.dimensions)
+          PY
+
   # https miễn phí, cần cho camera trên điện thoại
   deploy:
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'

@@ -7,11 +7,13 @@
     "dev": "vite --host",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host",
-    "test": "vitest run"
+    "test": "vitest run",
+    "hub": "node tools/hub.mjs"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",
     "@vitejs/plugin-basic-ssl": "^2.3.0",
+    "selfsigned": "^5.5.0",
     "typescript": "^5.9.2",
     "vite": "^7.1.3",
     "vitest": "^3.2.4"

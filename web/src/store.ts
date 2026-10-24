@@ -15,6 +15,9 @@ export interface SheetRecord {
   flags: string[];
   anchors: { used: number; residual: number };
   duplicate?: boolean;
+  /** stable id for the hub, so a retried upload never creates a second row */
+  uid?: string;
+  sent?: boolean;
 }
 
 const DB_NAME = "omr";
@@ -54,12 +57,12 @@ export async function add(record: SheetRecord, thumb?: Blob | null): Promise<She
   const db = await open();
   const tx = db.transaction([SHEETS, THUMBS], "readwrite");
   const sheets = tx.objectStore(SHEETS);
-  let saved: SheetRecord = record;
+  let saved: SheetRecord = { uid: crypto.randomUUID(), ...record };
 
   // write only lands when the transaction commits; "received" must mean stored
   const count = sheets.index("studentId").count(record.studentId);
   count.onsuccess = () => {
-    saved = { ...record, duplicate: count.result > 0 };
+    saved = { ...saved, duplicate: count.result > 0 };
     const req = sheets.add(saved);
     req.onsuccess = () => {
       saved = { ...saved, id: req.result as number };
@@ -93,6 +96,39 @@ export async function recent(limit: number): Promise<SheetRecord[]> {
       cursor.continue();
     };
     req.onerror = () => reject(req.error);
+  });
+}
+
+/** Oldest first, so the hub receives sheets in the order they were scanned. */
+export async function unsent(limit = 50): Promise<SheetRecord[]> {
+  const db = await open();
+  const store = db.transaction(SHEETS).objectStore(SHEETS);
+  return new Promise((resolve, reject) => {
+    const out: SheetRecord[] = [];
+    const req = store.openCursor();
+    req.onsuccess = () => {
+      const cursor = req.result;
+      if (!cursor || out.length >= limit) return resolve(out);
+      const row = cursor.value as SheetRecord;
+      if (!row.sent) out.push(row);
+      cursor.continue();
+    };
+    req.onerror = () => reject(req.error);
+  });
+}
+
+export async function markSent(id: number): Promise<void> {
+  const db = await open();
+  const tx = db.transaction(SHEETS, "readwrite");
+  const store = tx.objectStore(SHEETS);
+  const req = store.get(id);
+  req.onsuccess = () => {
+    const row = req.result as SheetRecord | undefined;
+    if (row) store.put({ ...row, sent: true });
+  };
+  await new Promise<void>((resolve, reject) => {
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
   });
 }
 

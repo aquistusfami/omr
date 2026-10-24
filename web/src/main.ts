@@ -7,6 +7,7 @@ import { fromRgba } from "./image";
 import { DEFAULT_KEY, parseKeys, score, type KeyConfig } from "./key";
 import { Scanner } from "./scan";
 import * as store from "./store";
+import * as sync from "./sync";
 import type { Template } from "./types";
 import { toXlsx } from "./xlsx";
 
@@ -21,6 +22,10 @@ const banner = $<HTMLParagraphElement>("banner");
 const hintText = $<HTMLSpanElement>("hint-text");
 const hintMarks = $<HTMLSpanElement>("hint-marks");
 const lastEl = $<HTMLParagraphElement>("last");
+const hubPanel = $<HTMLElement>("hub-panel");
+const hubToken = $<HTMLInputElement>("hub-token");
+const hubConnect = $<HTMLButtonElement>("hub-connect");
+const hubStatus = $<HTMLParagraphElement>("hub-status");
 const statusEl = $<HTMLParagraphElement>("status");
 const listEl = $<HTMLElement>("list");
 const countEl = $<HTMLElement>("count");
@@ -191,7 +196,43 @@ function toRecord(r: GradeResult) {
 
 async function save(result: GradeResult): Promise<store.SheetRecord> {
   const thumb = result.canvas ? await toThumbnail(result.canvas) : null;
-  return store.add(toRecord(result), thumb);
+  const saved = await store.add(toRecord(result), thumb);
+  void flush();
+  return saved;
+}
+
+/* -------------------------------------------------------------------- hub */
+
+let flushing = false;
+
+/** Upload whatever the computer has not acknowledged yet, oldest first. */
+async function flush(): Promise<void> {
+  if (flushing || !sync.state().connected) return;
+  flushing = true;
+  try {
+    for (const row of await store.unsent(20)) {
+      if (!row.id) continue;
+      const blob = await store.thumb(row.id);
+      if (await sync.pushSheet(row, blob)) await store.markSent(row.id);
+      else break;
+    }
+  } finally {
+    flushing = false;
+    updateHub();
+  }
+}
+
+function updateHub(): void {
+  const { active, connected } = sync.state();
+  hubPanel.hidden = !active;
+  hubToken.hidden = connected;
+  hubConnect.hidden = connected;
+  if (!active) return;
+  hubStatus.textContent = connected
+    ? "Đang gửi phiếu về máy tính ngay khi chấm xong."
+    : sync.hasToken()
+      ? "Sai mã kết nối hoặc máy tính đang tắt."
+      : "Nhập mã kết nối in ở cửa sổ trên máy tính.";
 }
 
 /* -------------------------------------------------------------------- loop */
@@ -351,6 +392,7 @@ async function render(): Promise<void> {
   const hasKey = Object.keys(keys).length > 0;
   const scored = rows.map((r) => score(r, keys, keyCfg)).filter((s) => s !== null);
   const average = scored.length ? scored.reduce((a, s) => a + s.total, 0) / scored.length : 0;
+  const sentCount = rows.filter((r) => r.sent).length;
 
   statusEl.textContent =
     `${rows.length} phiếu · ${flagged} có ô cần xem · ${bad} bị từ chối` +
@@ -360,7 +402,8 @@ async function render(): Promise<void> {
       : "") +
     (hasKey && scored.length < rows.length
       ? ` · ${rows.length - scored.length} chưa có đáp án/điểm`
-      : "");
+      : "") +
+    (sync.state().active ? ` · đã gửi ${sentCount}/${rows.length}` : "");
 
   const total = String(rows.length);
   if (countEl.textContent !== total) {
@@ -445,6 +488,7 @@ function keyChanged(): void {
     mode: p2Mode.value === "all" ? "all" : "split",
   };
   applyKeyConfig();
+  if (sync.state().connected) void sync.pushKey({ cfg: keyCfg, keys });
   clearTimeout(keyTimer);
   keyTimer = window.setTimeout(() => void render(), 300);
 }
@@ -453,6 +497,17 @@ keyText.addEventListener("input", keyChanged);
 p1Weight.addEventListener("input", keyChanged);
 p2Weight.addEventListener("input", keyChanged);
 p2Mode.addEventListener("change", keyChanged);
+
+hubConnect.addEventListener("click", async () => {
+  sync.setToken(hubToken.value);
+  await sync.probe();
+  updateHub();
+  if (!sync.state().connected) return;
+  hubToken.value = "";
+  void sync.pushKey({ cfg: keyCfg, keys });
+  await flush();
+  await render();
+});
 
 $("auto").addEventListener("click", () => {
   unlockAudio();
@@ -489,4 +544,11 @@ document.addEventListener("visibilitychange", () => {
   }
 });
 
-void render();
+void sync.probe().then(async () => {
+  updateHub();
+  if (sync.state().connected) {
+    void sync.pushKey({ cfg: keyCfg, keys });
+    await flush();
+  }
+  await render();
+});

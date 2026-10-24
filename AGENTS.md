@@ -46,8 +46,9 @@ Xem `docs/06-roadmap.md`.
 cd web && npm install && npm run dev
 HTTP=1 npm run dev     # http, chỉ để xem giao diện trên máy tính
 
-cd web && npm test        # grade + state machine + xlsx
+cd web && npm test        # grade + state machine + xlsx + hub API
 cd web && npm run build   # tsc --noEmit + vite build
+cd web && npm run hub     # hub LAN: phục vụ dist, nhận phiếu vào ../../data/omr
 # CI chạy đúng các lệnh trên, cộng thêm build_template.py --check và mở file .xlsx
 # bằng openpyxl: .github/workflows/ci.yml
 # Push master ⇒ job deploy xuất bản web/dist lên GitHub Pages (cần bật Pages một lần
@@ -58,6 +59,8 @@ python3 tools/build_template.py          # tạo lại template.json + ảnh ove
 python3 tools/build_template.py --check  # CI: template có khớp phiếu mẫu không
 python3 tools/make_fixtures.py --count 3 # sinh ảnh phiếu đã tô để test
 python3 tools/make_fixtures.py --count 30 --out /tmp/sheets   # để đo độ chính xác
+python3 tools/report.py --dir fixtures/sample-run -o /tmp/bao-cao.xlsx  # CI cũng chạy cái này
+# report.py cần openpyxl: uv run --with openpyxl python3 tools/report.py
 ```
 
 ## Bản đồ repo
@@ -78,8 +81,12 @@ python3 tools/make_fixtures.py --count 30 --out /tmp/sheets   # để đo độ 
 | `web/src/store.ts` | IndexedDB: `sheets` + `thumbs` (ảnh tách riêng) |
 | `web/src/export.ts` | bảng dùng chung cho CSV/XLSX, JSON |
 | `web/src/xlsx.ts` | ghi .xlsx tối giản (zip không nén), không dependency |
+| `web/src/sync.ts` | gửi phiếu + đáp án lên hub (token, hàng đợi, thử lại) |
 | `web/src/main.ts` | UI: hai chế độ, banner, bíp, danh sách, xuất file |
-| `docs/` | kiến trúc, định dạng template, thuật toán, vận hành, roadmap |
+| `web/tools/hub.mjs` | máy chủ LAN: phục vụ app, nhận phiếu/đáp án, ghi `data/omr/` |
+| `tools/report.py` | Excel 4 sheet từ dữ liệu của hub |
+| `data/` | **gitignored**: dữ liệu chấm thật do hub ghi (jsonl + ảnh + đáp án) |
+| `docs/` | kiến trúc, định dạng template, thuật toán, vận hành, roadmap, hub |
 
 ## Bất biến — đừng phá
 
@@ -108,6 +115,11 @@ python3 tools/make_fixtures.py --count 30 --out /tmp/sheets   # để đo độ 
    Đáp án + trọng số lưu ở localStorage `omr:key:v1`, file JSON xuất kèm `key` để tái lập được.
 9. **"Đã nhận" nghĩa là đã ghi xong**: `store.add()` chỉ resolve sau khi transaction commit.
    Đừng đổi thành ghi rồi trả về ngay, người dùng sẽ nhấc phiếu khi dữ liệu chưa xuống đĩa.
+10. **Hub không có đường đọc dữ liệu.** Chỉ `/api/health` trả số đếm; mọi endpoint khác là ghi
+    và cần `Bearer <token>`. Đừng thêm `GET /api/sheets` "cho tiện" — đó là mở toàn bộ điểm ra
+    cho cả wifi trường. Tên file do hub đặt từ `uid` đã kiểm dạng, không nhận đường dẫn từ client.
+11. **IndexedDB vẫn là nguồn sự thật.** Gửi lên hub là mirror: chỉ đánh dấu `sent` khi hub trả
+    200, và hàng đợi phải gửi lại được sau khi mất wifi. Đừng xoá bản ghi local sau khi gửi.
 
 ## Cách kiểm tra một thay đổi
 
