@@ -13,6 +13,7 @@ function result(id = "123456789", q1 = "A", ok = true): GradeResult {
     p2: { "11": { values: ["D", "S", "", "", "", ""], flags: [], confidence: 1 } },
     flags: [],
     anchors: { used: ok ? 21 : 3, residual: 0.5 },
+    marks: ok ? 21 : 7,
   };
 }
 
@@ -72,5 +73,16 @@ describe("Scanner", () => {
       expect(s.push(frame(t, empty, false)).type).toBe("wait");
     }
     expect(s.phase).toBe("idle");
+  });
+
+  it("re-arms through the cheap cooldown check", () => {
+    const s = new Scanner(350);
+    s.push(frame(0, result()));
+    expect(s.push(frame(400, result())).type).toBe("accept");
+    expect(s.cleared(true)).toBe(false); // sheet still there
+    expect(s.cleared(false)).toBe(false);
+    expect(s.cleared(false)).toBe(true);
+    expect(s.phase).toBe("idle");
+    expect(s.cleared(false)).toBe(false); // only meaningful while cooling down
   });
 });

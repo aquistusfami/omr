@@ -67,6 +67,11 @@ tabular-nums` để bộ đếm không nhảy bề ngang.
 
 Bán kính: 14 px cho nút và dải, 16 px cho khung ngắm, 10 px cho nút icon. Hàng dữ liệu bo 0.
 
+Quy tắc bắt buộc: khối nào tự đặt `display` (`.stage`, `.picker`) thì phải có
+`[hidden] { display: none !important }` toàn cục. Thuộc tính `hidden` của HTML yếu hơn một
+`display` khai báo trong CSS, nên thiếu dòng đó là khung "Chụp phiếu" vẫn nằm dưới camera khi
+đang quét.
+
 ## Chuyển động
 
 Một nhịp duy nhất: `cubic-bezier(0.16, 1, 0.3, 1)`, 180 ms cho màu nền/viền, 220 ms cho bộ đếm
@@ -76,6 +81,10 @@ Một nhịp duy nhất: `cubic-bezier(0.16, 1, 0.3, 1)`, 180 ms cho màu nền/
 
 `body[data-state]` là nguồn duy nhất: `wait` (mặc định, nền `--surface`), `ok`, `bad`. CSS suy ra màu dải,
 viền khung và màu chữ từ đó, nên chỉ cần đổi một thuộc tính khi logic đổi trạng thái.
+
+Mở app ở chế độ **Chụp thủ công** (khung chọn ảnh hiện sẵn, nút "Chụp thủ công" đang bật) vì
+camera chỉ mở được sau một cú chạm; dải trạng thái lúc đó ghi "Sẵn sàng". Dải được cập nhật qua
+một khoá so sánh chuỗi — đừng ghi lại cùng một câu mỗi khung hình, `aria-live` sẽ đọc lặp.
 
 Nhãn cố định: "Đưa phiếu vào khung" · "Đang đọc…" · "Đã nhận — nhấc phiếu ra" ·
 "Mờ hoặc lệch — đặt lại" · "Thiếu dấu góc — đặt lại" · "Không đọc được phiếu".

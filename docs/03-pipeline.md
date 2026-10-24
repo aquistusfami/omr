@@ -131,8 +131,8 @@ nâng cấp là: dùng 19 dấu nhỏ làm mốc cục bộ, mỗi khối nắn 
 
 ## 10. Quét tự động
 
-`web/src/scan.ts` là máy trạng thái thuần (không đụng DOM, có test riêng). Mỗi ~220 ms lấy một
-khung hình, chấm, rồi đẩy kết quả vào `Scanner`:
+`web/src/scan.ts` là máy trạng thái thuần (không đụng DOM, có test riêng). Vòng lặp trong
+`main.ts` lấy một khung hình, chấm, rồi đẩy kết quả vào `Scanner`:
 
 ```
 idle ──đọc được──▶ settle ──hai lần khớp sau ≥350 ms──▶ cooldown
@@ -146,7 +146,7 @@ Ba tham số, đổi ở constructor:
 | Tham số | Mặc định | Ý nghĩa |
 |---|---|---|
 | `settleMs` | 350 | hai lần đọc phải cách nhau ít nhất chừng này mới tin là phiếu đứng yên |
-| `badFramesNeeded` | 4 | ~0,9 s có dấu góc nhưng fit hỏng thì mới báo đỏ (tránh báo khi đang đặt phiếu) |
+| `badFramesNeeded` | 4 | ~1,2 s có dấu góc nhưng fit hỏng thì mới báo đỏ (tránh báo khi đang đặt phiếu) |
 | `emptyFramesNeeded` | 2 | phải thấy 2 khung không có dấu mới cho phép nhận phiếu tiếp |
 
 Hai lần đọc "khớp" = mã SV, mã đề và **mọi** đáp án giống nhau (`sameAnswers()`); chất lượng
@@ -155,3 +155,36 @@ Hai lần đọc "khớp" = mã SV, mã đề và **mọi** đáp án giống nh
 Điều quan trọng nhất: sau khi nhận, `cooldown` chặn mọi lần nhận tiếp cho đến khi phiếu được
 nhấc ra. Đây là thứ duy nhất khiến "treo điện thoại và đặt phiếu" không sinh ra 20 dòng cho một
 phiếu. Đừng bỏ.
+
+### 10a. Chi phí mỗi khung
+
+Một phiếu mất 4–5 khung, nên chi phí khung hình là chi phí của cả buổi chấm. Ba chỗ đã tối ưu,
+đừng hoàn nguyên:
+
+- **`cooldown` không chấm lại.** Phiếu đã được tính rồi; chỉ cần biết nó đã rời khung. Nhánh này
+  chỉ gọi `findAnchors()` trên khung 900 px (`Scanner.cleared()`), không warp, không đọc 240 ô.
+  Nếu chấm lại suốt 2–5 giây phiếu còn nằm đó thì mất khoảng 1/3 thời gian CPU của buổi chấm.
+- **`keepCanvas` chỉ bật ở pha `settle`.** Ảnh đã warp (1500×1442) chỉ dùng để làm thumbnail cho
+  phiếu được nhận, nên các khung bị bỏ không cấp phát nó.
+- **`grabFrame` dùng lại một canvas.** Tạo canvas 1800 px mỗi khung là ~9 MB rác mỗi lần, 4 lần
+  mỗi giây; trên điện thoại sẽ giật.
+
+Vòng lặp nhắm chu kỳ 300 ms (`FRAME_GAP`) và tự trừ thời gian đã chấm, nên máy chậm thì nó chạy
+chậm lại thay vì dồn việc.
+
+### 10b. Lỗi không được làm chết vòng lặp
+
+`tick()` bọc toàn bộ phần chấm trong `try/catch`. Một khung dị dạng, IndexedDB đầy (500 phiếu
+× ~60 KB thumbnail), hay ảnh warp lỗi **không** được phép dừng camera: lỗi được báo một lần lên
+dải trạng thái, rồi vòng lặp tiếp tục. Trước đây thiếu `catch` nên chỉ một exception là camera
+vẫn bật nhưng không chấm gì nữa, im lặng — đúng kiểu "quét tự động không hoạt động".
+
+Cùng nguyên tắc với lỗi mở camera: `startAuto()` báo lên dải trạng thái (thứ người dùng đang
+nhìn), không báo vào dòng trạng thái nằm dưới đáy trang.
+
+### 10c. "Có phiếu" nghĩa là gì
+
+`GradeResult.marks` là số dấu góc vuông phát hiện được, kể cả khi fit hỏng (trước đây thông tin
+này bị mất khi `findAnchors()` trả `null`). Vòng lặp coi `marks >= 6` là "có phiếu trong khung",
+để một phiếu đặt lệch vẫn báo đỏ "Thiếu dấu góc — đặt lại" thay vì im lặng.
+

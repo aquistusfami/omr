@@ -31,9 +31,17 @@ bấm "Quét tự động"  →  đặt phiếu vào khung  →  chờ tiếng b
 
 - **Bíp + banner xanh** = phiếu đã được lưu xong vào máy. Chỉ nhấc phiếu khi nghe bíp.
   Banner ghi mã sinh viên, mã đề và số ô cần xem.
-- Banner đỏ = chưa đọc được (mờ, lệch, thiếu dấu góc). Nhấc phiếu ra, đặt lại. Không cần bấm gì.
+- Banner đỏ = chưa đọc được. Hai câu khác nhau, hai cách xử lý:
+  - "Mờ hoặc lệch — đặt lại": thấy đủ dấu góc nhưng ảnh nhoè. Nhấc phiếu ra, đặt lại, giữ tay
+    thêm nửa giây cho máy lấy nét.
+  - "Thiếu dấu góc — đặt lại": phiếu nằm ngoài khung hoặc bị che một góc. Đặt lại cho cả 4 góc
+    nằm trong ô nét đứt.
+  Cả hai trường hợp **không cần bấm gì**, chỉ nhấc phiếu ra rồi đặt lại.
 - Hệ thống **không nhận lại cùng một phiếu** khi nó vẫn nằm dưới camera: phải nhấc ra ít nhất
-  ~0,5 giây rồi đặt phiếu khác.
+  ~0,6 giây (2 khung hình) rồi đặt phiếu khác.
+- Nếu banner đứng im ở "Đưa phiếu vào khung" dù camera vẫn chạy: bấm "Chụp thủ công" rồi
+  "Quét tự động" để khởi động lại vòng quét. Lỗi đọc một khung hình không làm chết vòng lặp,
+  nhưng đổi quyền camera giữa chừng thì phải mở lại.
 - Giữ **thứ tự xếp phiếu** trùng thứ tự quét. Không cần đánh số: mã sinh viên đã nằm trong kết quả.
 - Mỗi phiếu ~4 giây. 500 phiếu ≈ **35–45 phút** cho một người.
 

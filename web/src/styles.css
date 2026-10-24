@@ -57,6 +57,12 @@ body[data-state="bad"] {
   box-sizing: border-box;
 }
 
+/* .stage and .picker set their own display, which silently beats the hidden
+   attribute: without this, the manual picker stays on screen while scanning. */
+[hidden] {
+  display: none !important;
+}
+
 html {
   height: 100%;
 }

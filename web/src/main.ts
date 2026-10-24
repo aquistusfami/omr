@@ -1,4 +1,5 @@
 import templateJson from "../../fixtures/template.json";
+import { findAnchors } from "./anchors";
 import { cameraSupported, grabFrame, startCamera, stopCamera, toThumbnail } from "./capture";
 import { download, tableData, toCsv, toJson } from "./export";
 import { gradeSheet, type GradeResult } from "./grade";
@@ -30,13 +31,13 @@ const p2Weight = $<HTMLInputElement>("p2-weight");
 const p2Mode = $<HTMLSelectElement>("p2-mode");
 const keyStatus = $<HTMLParagraphElement>("key-status");
 
-const scanner = new Scanner();
+let scanner = new Scanner();
 let stream: MediaStream | null = null;
 let running = false;
 let busy = false;
 let generation = 0;
-let lastAcceptAt = 0;
 let audio: AudioContext | null = null;
+let lastError = "";
 
 $("template-name").textContent = `${tmpl.name} · ${tmpl.blocks ? Object.keys(tmpl.blocks).length : 0} khối ô`;
 
@@ -125,7 +126,14 @@ function beep(ok: boolean): void {
   navigator.vibrate?.(ok ? 60 : [60, 80, 60]);
 }
 
+// The banner is an aria-live region: rewriting the same text every frame makes
+// a screen reader repeat it, and repaints for nothing.
+let bannerKey = "";
+
 function setBanner(kind: "wait" | "ok" | "bad", text: string, detail?: string): void {
+  const key = `${kind}|${text}|${detail ?? "\u0000"}`;
+  if (key === bannerKey) return;
+  bannerKey = key;
   banner.textContent = text;
   if (detail !== undefined) lastEl.textContent = detail;
   document.body.dataset.state = kind;
@@ -164,63 +172,90 @@ async function save(result: GradeResult): Promise<store.SheetRecord> {
 
 /* -------------------------------------------------------------------- loop */
 
+const FRAME_GAP = 300;
+
+async function scanOnce(): Promise<void> {
+  // After an accept the sheet is still on the stand: stop spending a full
+  // grading pass on it, just watch for it leaving the frame.
+  if (scanner.phase === "cooldown") {
+    const marksSeen = !!findAnchors(grabFrame(video, 900), tmpl);
+    if (scanner.cleared(marksSeen)) setBanner("wait", "Đưa phiếu tiếp theo vào khung", "");
+    return;
+  }
+
+  const result = gradeSheet(grabFrame(video), tmpl, {
+    // only the frame that may be accepted needs the rectified image for a thumbnail
+    keepCanvas: scanner.phase === "settle",
+  });
+  const action = scanner.push({
+    at: performance.now(),
+    result,
+    marksSeen: result.marks >= 6,
+  });
+
+  if (action.type === "accept") {
+    const saved = await save(action.result);
+    beep(true);
+    setBanner("ok", "Đã nhận — nhấc phiếu ra", details(saved));
+    await render();
+  } else if (action.type === "reject") {
+    beep(false);
+    setBanner(
+      "bad",
+      action.reason === "quality" ? "Mờ hoặc lệch — đặt lại" : "Thiếu dấu góc — đặt lại",
+    );
+  } else {
+    setBanner("wait", scanner.phase === "settle" ? "Đang đọc…" : "Đưa phiếu vào khung");
+  }
+}
+
 async function tick(): Promise<void> {
   if (!running) return;
   const mine = generation;
+  const started = performance.now();
   if (!busy && video.readyState >= 2 && video.videoWidth) {
     busy = true;
     try {
-      const result = gradeSheet(grabFrame(video), tmpl, { keepCanvas: true });
-      const action = scanner.push({
-        at: performance.now(),
-        result,
-        marksSeen: result.anchors.used > 0,
-      });
-
-      if (action.type === "accept") {
-        lastAcceptAt = performance.now();
-        const saved = await save(action.result);
-        beep(true);
-        setBanner("ok", "Đã nhận — nhấc phiếu ra", details(saved));
-        await render();
-      } else if (action.type === "reject") {
+      await scanOnce();
+      lastError = "";
+    } catch (error) {
+      // One unreadable frame, a full disk or a locked database must never stop
+      // the camera: report it, then keep scanning.
+      const message = (error as Error)?.message || String(error);
+      if (message !== lastError) {
+        lastError = message;
         beep(false);
-        setBanner(
-          "bad",
-          action.reason === "quality" ? "Mờ hoặc lệch — đặt lại" : "Thiếu dấu góc — đặt lại",
-        );
-      } else {
-        const phase = scanner.phase;
-        // keep the accepted-sheet details on screen for a moment
-        const stillShowing = performance.now() - lastAcceptAt < 2500;
-        if (phase !== "cooldown" || !stillShowing) {
-          setBanner(
-            phase === "cooldown" ? "ok" : "wait",
-            phase === "cooldown" ? "Đã nhận — nhấc phiếu ra" : phase === "settle" ? "Đang đọc…" : "Đưa phiếu vào khung",
-          );
-        }
+        setBanner("bad", "Lỗi khi chấm phiếu", message);
       }
     } finally {
       busy = false;
     }
   }
   if (mine !== generation) return;
-  setTimeout(() => void tick(), 220);
+  setTimeout(() => void tick(), Math.max(80, FRAME_GAP - (performance.now() - started)));
 }
 
 async function startAuto(): Promise<void> {
   if (running) return;
   if (!cameraSupported()) {
-    statusEl.textContent =
-      "Trình duyệt không cho mở camera. Cần https (hoặc localhost) và quyền camera — dùng \"Chụp thủ công\" nếu không xử lý được.";
+    setBanner(
+      "bad",
+      "Không mở được camera",
+      location.protocol === "https:"
+        ? "Hãy cho phép quyền camera cho trang này rồi thử lại"
+        : "Trang phải chạy bằng https — hoặc dùng Chụp thủ công",
+    );
     return;
   }
   try {
     stream = await startCamera(video);
   } catch (error) {
-    statusEl.textContent = `Không mở được camera: ${(error as Error).message}`;
+    setBanner("bad", "Không mở được camera", (error as Error).message);
     return;
   }
+  // a scanner left in cooldown from the previous run would ignore the first
+  // sheet until it saw two empty frames
+  scanner = new Scanner();
   stage.hidden = false;
   picker.hidden = true;
   stage.style.aspectRatio = `${video.videoWidth} / ${video.videoHeight}`;
@@ -244,25 +279,30 @@ function stopAuto(): void {
 /* ------------------------------------------------------------ manual input */
 
 async function handleFile(file: File): Promise<void> {
-  const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
-  const scale = Math.min(1, 1800 / Math.max(bitmap.width, bitmap.height));
-  const w = Math.round(bitmap.width * scale);
-  const h = Math.round(bitmap.height * scale);
-  const canvas = document.createElement("canvas");
-  canvas.width = w;
-  canvas.height = h;
-  const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
-  ctx.drawImage(bitmap, 0, 0, w, h);
-  bitmap.close();
+  try {
+    const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+    const scale = Math.min(1, 1800 / Math.max(bitmap.width, bitmap.height));
+    const w = Math.round(bitmap.width * scale);
+    const h = Math.round(bitmap.height * scale);
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
+    ctx.drawImage(bitmap, 0, 0, w, h);
+    bitmap.close();
 
-  const result = gradeSheet(fromRgba(ctx.getImageData(0, 0, w, h).data, w, h), tmpl, {
-    keepCanvas: true,
-  });
-  const saved = await save(result);
-  beep(result.ok);
-  if (result.ok) setBanner("ok", "Đã nhận — nhấc phiếu ra", details(saved));
-  else setBanner("bad", "Không đọc được phiếu", `lý do: ${result.reason}`);
-  await render();
+    const result = gradeSheet(fromRgba(ctx.getImageData(0, 0, w, h).data, w, h), tmpl, {
+      keepCanvas: true,
+    });
+    const saved = await save(result);
+    beep(result.ok);
+    if (result.ok) setBanner("ok", "Đã nhận — nhấc phiếu ra", details(saved));
+    else setBanner("bad", "Không đọc được phiếu", `lý do: ${result.reason}`);
+    await render();
+  } catch (error) {
+    beep(false);
+    setBanner("bad", "Không đọc được ảnh", (error as Error)?.message || String(error));
+  }
 }
 
 /* ------------------------------------------------------------------- list */
@@ -390,7 +430,7 @@ $("manual").addEventListener("click", () => {
 fileInput.addEventListener("change", () => {
   const file = fileInput.files?.[0];
   fileInput.value = "";
-  if (file) void handleFile(file).catch((e) => (statusEl.textContent = `Lỗi: ${e.message}`));
+  if (file) void handleFile(file);
 });
 $("csv").addEventListener("click", () => void exportAs("csv"));
 $("xlsx").addEventListener("click", () => void exportAs("xlsx"));

@@ -19,6 +19,8 @@ export interface GradeResult {
   p2: Record<string, { values: string[]; flags: Flag[]; confidence: number }>;
   flags: string[];
   anchors: { used: number; residual: number };
+  /** square registration marks found in the frame, even when the fit failed */
+  marks: number;
   /** rectified page, only when the caller asks for it (thumbnail / review) */
   canvas?: Gray;
 }
@@ -121,7 +123,8 @@ export function gradeSheet(
   tmpl: Template,
   options: { keepCanvas?: boolean } = {},
 ): GradeResult {
-  const match = findAnchors(image, tmpl);
+  const stats = { marks: 0 };
+  const match = findAnchors(image, tmpl, stats);
   const empty: GradeResult = {
     ok: false,
     studentId: "",
@@ -130,8 +133,9 @@ export function gradeSheet(
     p2: {},
     flags: [],
     anchors: { used: 0, residual: 0 },
+    marks: 0,
   };
-  if (!match) return { ...empty, reason: "anchors" };
+  if (!match) return { ...empty, reason: "anchors", marks: stats.marks };
   // a bad fit is worse than a rejected sheet: the readings would look confident
   const residualLimit = image.width * 0.0025;
   if (match.used < tmpl.anchors.length * 0.7 || match.residual > residualLimit) {
@@ -139,6 +143,7 @@ export function gradeSheet(
       ...empty,
       reason: match.residual > residualLimit ? "quality" : "anchors",
       anchors: { used: match.used, residual: Math.round(match.residual * 10) / 10 },
+      marks: stats.marks,
     };
   }
 
@@ -157,6 +162,7 @@ export function gradeSheet(
     p2: {},
     flags: [],
     anchors: { used: match.used, residual: Math.round(match.residual * 10) / 10 },
+    marks: stats.marks,
     canvas: options.keepCanvas ? canvas : undefined,
   };
 

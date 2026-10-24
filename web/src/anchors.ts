@@ -107,7 +107,13 @@ function matchPairs(
  * The sheet is rejected when the marks are not where the template says they
  * should be: a wrong form, a rotated photo or a shadow over a corner.
  */
-export function findAnchors(img: Gray, tmpl: Template, workWidth = 800): AnchorMatch | null {
+export function findAnchors(
+  img: Gray,
+  tmpl: Template,
+  /** filled even when the fit fails: how many square marks were detected */
+  stats?: { marks: number },
+  workWidth = 800,
+): AnchorMatch | null {
   const scale0 = img.width / workWidth;
   const small: Gray = scale0 > 1 ? downscale(img, workWidth) : img;
   // downscale caps the long edge, so for a portrait photo small.width is not
@@ -123,6 +129,7 @@ export function findAnchors(img: Gray, tmpl: Template, workWidth = 800): AnchorM
       c.w >= minSide && c.h >= minSide && c.w <= maxSide && c.h <= maxSide &&
       c.fill > 0.86 && Math.abs(c.w - c.h) <= 0.25 * Math.max(c.w, c.h),
   );
+  if (stats) stats.marks = marks.length;
   if (marks.length < 6) return null;
 
   const canvasBox: Pt[] = [

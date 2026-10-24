@@ -38,6 +38,19 @@ export class Scanner {
     return this.state;
   }
 
+  /**
+   * Cheap check for the cooldown phase: the sheet already counted is still in
+   * view, so only its absence matters. Returns true when the scanner re-armed.
+   */
+  cleared(marksSeen: boolean): boolean {
+    if (this.state !== "cooldown") return false;
+    this.emptyFrames = marksSeen ? 0 : this.emptyFrames + 1;
+    if (this.emptyFrames < this.emptyFramesNeeded) return false;
+    this.state = "idle";
+    this.emptyFrames = 0;
+    return true;
+  }
+
   push({ at, result, marksSeen }: Frame): Action {
     if (this.state === "cooldown") {
       this.emptyFrames = marksSeen ? 0 : this.emptyFrames + 1;

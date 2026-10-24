@@ -26,22 +26,29 @@ export function stopCamera(stream: MediaStream | null): void {
   stream?.getTracks().forEach((t) => t.stop());
 }
 
-function draw(video: HTMLVideoElement, maxEdge: number): { canvas: HTMLCanvasElement; w: number; h: number } {
+// One canvas for the whole scanning session: a fresh 1800px canvas per frame
+// means ~9 MB of garbage 4 times a second, which makes a phone stutter.
+let frameCanvas: HTMLCanvasElement | null = null;
+let frameCtx: CanvasRenderingContext2D | null = null;
+
+function draw(video: HTMLVideoElement, maxEdge: number): { ctx: CanvasRenderingContext2D; w: number; h: number } {
   const scale = Math.min(1, maxEdge / Math.max(video.videoWidth, video.videoHeight));
   const w = Math.round(video.videoWidth * scale);
   const h = Math.round(video.videoHeight * scale);
-  const canvas = document.createElement("canvas");
-  canvas.width = w;
-  canvas.height = h;
-  canvas.getContext("2d", { willReadFrequently: true })!.drawImage(video, 0, 0, w, h);
-  return { canvas, w, h };
+  frameCanvas ??= document.createElement("canvas");
+  frameCtx ??= frameCanvas.getContext("2d", { willReadFrequently: true })!;
+  if (frameCanvas.width !== w || frameCanvas.height !== h) {
+    frameCanvas.width = w;
+    frameCanvas.height = h;
+  }
+  frameCtx.drawImage(video, 0, 0, w, h);
+  return { ctx: frameCtx, w, h };
 }
 
 /** Current frame as grayscale, downscaled so the long edge is <= maxEdge. */
 export function grabFrame(video: HTMLVideoElement, maxEdge = 1800): Gray {
-  const { canvas, w, h } = draw(video, maxEdge);
-  const { data } = canvas.getContext("2d")!.getImageData(0, 0, w, h);
-  return fromRgba(data, w, h);
+  const { ctx, w, h } = draw(video, maxEdge);
+  return fromRgba(ctx.getImageData(0, 0, w, h).data, w, h);
 }
 
 /** Small JPEG of the rectified sheet, kept as the evidence trail for a disputed row. */

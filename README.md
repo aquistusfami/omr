@@ -66,7 +66,7 @@ Cập nhật 2026-10-24. Chi tiết và tiêu chí nghiệm thu: [docs/06-roadma
 | Template từ phiếu thật, dò 4 dấu góc, nắn phối cảnh | ✅ |
 | Đọc 220 ô trả lời, cờ ô mờ / tô nhiều / ô trống | ✅ |
 | Đọc được **bản scan thật** (57 tờ, A4 dọc, giấy tối dần) | ✅ 57/57, xem bên dưới |
-| Quét tự động trên giá cố định, chống nhận trùng một phiếu | ✅ code + test, **chưa chạy trên điện thoại thật** |
+| Quét tự động trên giá cố định, chống nhận trùng một phiếu | ✅ code + test, đã sửa lỗi vòng lặp chết im lặng; **chưa chạy trên điện thoại thật** |
 | Chụp thủ công (input file) khi không có camera | ✅ |
 | Lưu IndexedDB: kết quả + ảnh phiếu 900 px | ✅ |
 | Xuất CSV / Excel (.xlsx) / JSON | ✅ |
