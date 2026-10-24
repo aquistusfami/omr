@@ -18,6 +18,8 @@ const stage = $<HTMLElement>("stage");
 const picker = $<HTMLElement>("picker");
 const fileInput = $<HTMLInputElement>("file");
 const banner = $<HTMLParagraphElement>("banner");
+const hintText = $<HTMLSpanElement>("hint-text");
+const hintMarks = $<HTMLSpanElement>("hint-marks");
 const lastEl = $<HTMLParagraphElement>("last");
 const statusEl = $<HTMLParagraphElement>("status");
 const listEl = $<HTMLElement>("list");
@@ -110,9 +112,19 @@ themeBtn.addEventListener("click", () => {
 
 /* ---------------------------------------------------------------- feedback */
 
+function unlockAudio(): void {
+  try {
+    audio ??= new AudioContext();
+    void audio.resume();
+  } catch {
+    /* no audio is acceptable; the banner still shows the state */
+  }
+}
+
 function beep(ok: boolean): void {
   try {
     audio ??= new AudioContext();
+    if (audio.state === "suspended") void audio.resume();
     const osc = audio.createOscillator();
     const gain = audio.createGain();
     osc.frequency.value = ok ? 880 : 300;
@@ -147,6 +159,18 @@ function details(saved: store.SheetRecord): string {
   );
 }
 
+// Aiming aid inside the viewfinder. It answers "is the phone actually seeing
+// the sheet, and what should I change?" without the user reading the banner.
+let hintKey = "";
+
+function setHint(text: string, marks?: number): void {
+  const key = `${text}|${marks ?? "-"}`;
+  if (key === hintKey) return;
+  hintKey = key;
+  hintText.textContent = text;
+  hintMarks.textContent = marks === undefined ? "" : `${marks}/${tmpl.anchors.length}`;
+}
+
 /* ------------------------------------------------------------------ record */
 
 function toRecord(r: GradeResult) {
@@ -179,7 +203,10 @@ async function scanOnce(): Promise<void> {
   // grading pass on it, just watch for it leaving the frame.
   if (scanner.phase === "cooldown") {
     const marksSeen = !!findAnchors(grabFrame(video, 900), tmpl);
-    if (scanner.cleared(marksSeen)) setBanner("wait", "Đưa phiếu tiếp theo vào khung", "");
+    if (scanner.cleared(marksSeen)) {
+      setBanner("wait", "Đưa phiếu tiếp theo vào khung", "");
+      setHint("Chưa thấy phiếu", 0);
+    }
     return;
   }
 
@@ -197,6 +224,7 @@ async function scanOnce(): Promise<void> {
     const saved = await save(action.result);
     beep(true);
     setBanner("ok", "Đã nhận — nhấc phiếu ra", details(saved));
+    setHint("Nhấc phiếu ra");
     await render();
   } else if (action.type === "reject") {
     beep(false);
@@ -204,8 +232,14 @@ async function scanOnce(): Promise<void> {
       "bad",
       action.reason === "quality" ? "Mờ hoặc lệch — đặt lại" : "Thiếu dấu góc — đặt lại",
     );
+    setHint("Nhấc ra, đặt lại");
   } else {
     setBanner("wait", scanner.phase === "settle" ? "Đang đọc…" : "Đưa phiếu vào khung");
+    const marks = result.marks;
+    setHint(
+      marks >= 6 ? "Đã thấy phiếu — giữ yên" : marks > 0 ? "Đưa phiếu vào sâu hơn" : "Chưa thấy phiếu",
+      marks,
+    );
   }
 }
 
@@ -264,6 +298,7 @@ async function startAuto(): Promise<void> {
   $("auto").setAttribute("aria-pressed", "true");
   $("manual").setAttribute("aria-pressed", "false");
   setBanner("wait", "Đưa phiếu vào khung", "");
+  setHint("Chưa thấy phiếu", 0);
   void tick();
 }
 
@@ -419,8 +454,12 @@ p1Weight.addEventListener("input", keyChanged);
 p2Weight.addEventListener("input", keyChanged);
 p2Mode.addEventListener("change", keyChanged);
 
-$("auto").addEventListener("click", () => void startAuto());
+$("auto").addEventListener("click", () => {
+  unlockAudio();
+  void startAuto();
+});
 $("manual").addEventListener("click", () => {
+  unlockAudio();
   stopAuto();
   $("manual").setAttribute("aria-pressed", "true");
   stage.hidden = true;
@@ -428,6 +467,7 @@ $("manual").addEventListener("click", () => {
   setBanner("wait", "Chọn ảnh phiếu để chấm", "");
 });
 fileInput.addEventListener("change", () => {
+  unlockAudio();
   const file = fileInput.files?.[0];
   fileInput.value = "";
   if (file) void handleFile(file);

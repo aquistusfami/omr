@@ -65,6 +65,8 @@ body[data-state="bad"] {
 
 html {
   height: 100%;
+  /* a single too-wide child must not shift the whole app sideways on a phone */
+  overflow-x: clip;
 }
 
 /* min-height, not height: a long results list must grow the page instead of
@@ -74,6 +76,7 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
+  overflow-x: clip;
   background: var(--ground);
   color: var(--ink);
   font: 15px/1.45 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -173,7 +176,10 @@ body {
   width: 100%;
   max-width: 560px;
   margin: 0 auto;
-  padding: 10px 14px calc(14px + env(safe-area-inset-bottom));
+  /* viewport-fit=cover: keep clear of the notch and rounded corners */
+  padding:
+    10px max(14px, env(safe-area-inset-right))
+    calc(14px + env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
 }
 
 /* camera: the sensor. dark ground even in light theme, so the feed reads as a viewfinder */
@@ -212,6 +218,47 @@ body {
   border: 1px dashed color-mix(in srgb, #ffffff 70%, transparent);
   border-radius: 6px;
   pointer-events: none;
+}
+
+/* live aiming aid: the only feedback that matters while the phone is on the stand */
+.stage-hint {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(8, 12, 9, 0.66);
+  color: #f2f5f0;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.25;
+  pointer-events: none;
+}
+
+.stage-hint .live {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #8ee0ab;
+  animation: live 1.6s ease-in-out infinite;
+}
+
+.stage-hint .marks {
+  margin-left: auto;
+  font: 12px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  opacity: 0.75;
+}
+
+@keyframes live {
+  50% {
+    opacity: 0.2;
+  }
 }
 
 /* manual picker replaces the sensor in manual mode */
@@ -518,6 +565,13 @@ body {
   *::after {
     animation-duration: 0.001ms !important;
     transition-duration: 0.001ms !important;
+  }
+}
+
+/* tiny phones (iPhone SE 1st gen): two 52px buttons wrap their labels */
+@media (max-width: 359px) {
+  .controls {
+    grid-template-columns: 1fr;
   }
 }
 

@@ -56,6 +56,10 @@ tabular-nums` để bộ đếm không nhảy bề ngang.
   viền trong 3 px mang màu trạng thái (`box-shadow: inset`), khung nét đứt là gợi ý vị trí phiếu.
 - `.banner` — dải trạng thái, cao tối thiểu 84 px, chữ căn giữa, nền `--state-wash`, kẻ 1 px
   `--line`. Ở trạng thái `wait` nền là `--surface` để dải vẫn đọc ra là một khối, không phải chữ trôi.
+- `.stage-hint` — dải mờ tối nằm trong khung ngắm: chấm nhấp nháy (máy đang quét), câu hướng
+  dẫn ngắn ("Chưa thấy phiếu" · "Đưa phiếu vào sâu hơn" · "Đã thấy phiếu — giữ yên" · "Nhấc phiếu
+  ra") và bộ đếm `18/21` dấu góc. Đây là phản hồi duy nhất khi người dùng đứng xa máy — không có
+  nó thì "giơ máy lên quét" trông như không có gì xảy ra.
 - `.last` — một dòng chi tiết phiếu vừa nhận (MSV · đề · số ô cần xem · trùng).
 - `.controls` — hai nút 52 px chia đôi bề ngang; nút đang bật có chấm tròn `::before`.
 - `.utility` — bốn hành động nhỏ kiểu chữ có gạch chân mảnh; "Xoá hết" đẩy sang phải, chỉ đỏ khi hover.

@@ -70,7 +70,7 @@ Cập nhật 2026-10-24. Chi tiết và tiêu chí nghiệm thu: [docs/06-roadma
 | Chụp thủ công (input file) khi không có camera | ✅ |
 | Lưu IndexedDB: kết quả + ảnh phiếu 900 px | ✅ |
 | Xuất CSV / Excel (.xlsx) / JSON | ✅ |
-| Thiết kế lại giao diện (máy đo, 2 theme, dải trạng thái) | ✅ đã dựng ở 360/390 px, cả 2 theme |
+| Thiết kế lại giao diện (máy đo, 2 theme, dải trạng thái, gợi ý căn máy trong khung ngắm) | ✅ đã dựng ở 320/360/390 px + ngang, cả 2 theme |
 | CI: type check, test, build, template, mở file xlsx | ✅ |
 | Deploy GitHub Pages (https cho camera) | 🟠 chờ bật Pages trong Settings |
 | **M1 — đo độ chính xác trên 50 phiếu chấm tay** | 🔴 **việc tiếp theo** |

@@ -29,7 +29,13 @@ bấm "Quét tự động"  →  đặt phiếu vào khung  →  chờ tiếng b
    →  nhấc phiếu ra  →  đặt phiếu tiếp theo
 ```
 
+- **Dải mờ trong khung ngắm** là thứ để căn máy: chấm nhấp nháy = máy đang quét; câu chữ đổi
+  theo những gì nó thấy ("Chưa thấy phiếu" → "Đưa phiếu vào sâu hơn" → "Đã thấy phiếu — giữ yên"),
+  kèm số dấu góc `18/21`. Nếu số dấu đứng ở 0, chỉnh điện thoại cho cả 4 góc phiếu nằm trong ô
+  nét đứt.
 - **Bíp + banner xanh** = phiếu đã được lưu xong vào máy. Chỉ nhấc phiếu khi nghe bíp.
+  Trên iPhone, bíp chỉ kêu sau khi đã bấm ít nhất một nút trên trang (iOS chặn âm thanh trước
+  cú chạm đầu tiên) — nhìn banner xanh nếu không nghe thấy gì.
   Banner ghi mã sinh viên, mã đề và số ô cần xem.
 - Banner đỏ = chưa đọc được. Hai câu khác nhau, hai cách xử lý:
   - "Mờ hoặc lệch — đặt lại": thấy đủ dấu góc nhưng ảnh nhoè. Nhấc phiếu ra, đặt lại, giữ tay
