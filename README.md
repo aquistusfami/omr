@@ -139,6 +139,8 @@ python3 tools/report.py                    # data/omr/bao-cao.xlsx
 ```
 
 Chi tiết, cơ chế đồng bộ và **những gì được/không được bảo vệ**: [docs/07-may-tinh.md](docs/07-may-tinh.md).
+Điện thoại không mở được link thì kiểm tra: cùng wifi (không phải 4G), router không bật cách ly
+thiết bị (client isolation), và bấm qua cảnh báo chứng chỉ.
 
 ## Công cụ
 

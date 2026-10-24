@@ -11,7 +11,7 @@
  */
 import { createServer as createHttps } from "node:https";
 import { createServer as createHttp } from "node:http";
-import { createHash, randomBytes } from "node:crypto";
+import { createHash, randomBytes, X509Certificate } from "node:crypto";
 import { appendFile, mkdir, readFile, writeFile, stat } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { networkInterfaces } from "node:os";
@@ -33,13 +33,14 @@ const TYPES = {
   ".webmanifest": "application/manifest+json",
 };
 
-function lanAddress() {
+function lanAddresses() {
+  const out = [];
   for (const list of Object.values(networkInterfaces())) {
     for (const net of list ?? []) {
-      if (net.family === "IPv4" && !net.internal) return net.address;
+      if (net.family === "IPv4" && !net.internal) out.push(net.address);
     }
   }
-  return "127.0.0.1";
+  return out;
 }
 
 /** Bodies are tiny; anything bigger is a mistake or an attack. */
@@ -171,12 +172,39 @@ export async function startHub(options = {}) {
   let server;
   if (useTls) {
     const certFile = path.join(dir, ".cert.json");
-    if (!existsSync(certFile)) {
+    // iOS/Android refuse a certificate whose subjectAltName does not contain the
+    // exact IP in the address bar, so the cert must be built for this machine and
+    // remade when the machine changes network.
+    const wantSan = ["127.0.0.1", ...lanAddresses()];
+    const current = existsSync(certFile) ? JSON.parse(await readFile(certFile, "utf8")) : null;
+    const fits = (() => {
+      if (!current) return false;
+      try {
+        const san = new X509Certificate(current.cert).subjectAltName ?? "";
+        return wantSan.every((ip) => san.includes(`IP Address:${ip}`));
+      } catch {
+        return false;
+      }
+    })();
+
+    if (!fits) {
       const selfsigned = (await import("selfsigned")).default;
-      const pems = await selfsigned.generate([{ name: "commonName", value: "omr.local" }], {
-        days: 825,
-        keySize: 2048,
-      });
+      const pems = await selfsigned.generate(
+        [{ name: "commonName", value: wantSan.at(-1) ?? "omr.local" }],
+        {
+          days: 825,
+          keySize: 2048,
+          extensions: [
+            {
+              name: "subjectAltName",
+              altNames: [
+                ...wantSan.map((ip) => ({ type: 7, ip })),
+                { type: 2, value: "localhost" },
+              ],
+            },
+          ],
+        },
+      );
       await writeFile(certFile, JSON.stringify({ cert: pems.cert, key: pems.private }), { mode: 0o600 });
     }
     const pems = JSON.parse(await readFile(certFile, "utf8"));
@@ -191,8 +219,12 @@ export async function startHub(options = {}) {
   });
 
   const port = server.address().port;
+  const scheme = useTls ? "https" : "http";
+  const lan = host === "0.0.0.0" ? lanAddresses() : [host];
+  const urls = lan.map((ip) => `${scheme}://${ip}:${port}/`);
   return {
-    url: `${useTls ? "https" : "http"}://${host === "0.0.0.0" ? lanAddress() : host}:${port}/`,
+    url: urls[0] ?? `${scheme}://127.0.0.1:${port}/`,
+    urls,
     token,
     dir,
     close: () => new Promise((resolve) => server.close(resolve)),
@@ -212,13 +244,30 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     const i = process.argv.indexOf(`--${name}`);
     return i > 0 ? process.argv[i + 1] : fallback;
   };
-  const hub = await startHub({
-    port: Number(arg("port", 8443)),
-    dir: arg("dir", undefined),
-    http: process.argv.includes("--http"),
-  });
+  let hub;
+  try {
+    hub = await startHub({
+      port: Number(arg("port", 8443)),
+      dir: arg("dir", undefined),
+      http: process.argv.includes("--http"),
+    });
+  } catch (error) {
+    if (error?.code === "EADDRINUSE") {
+      console.error(`\n  Cổng ${arg("port", 8443)} đang bị chiếm (có thể hub cũ còn chạy).`);
+      console.error(`  Dùng cổng khác:  npm run hub -- --port 8444\n`);
+    } else {
+      console.error("\n  Không khởi động được hub:", error?.message ?? error, "\n");
+    }
+    process.exit(1);
+  }
   console.log(`\n  OMR hub đang chạy\n`);
   console.log(`  Mở trên điện thoại:  ${hub.url}?t=${hub.token}`);
+  for (const url of hub.urls.slice(1)) console.log(`  Địa chỉ khác:        ${url}?t=${hub.token}`);
   console.log(`  Dữ liệu lưu tại:     ${hub.dir}`);
+  console.log(`\n  Trên máy tính mở thử ${hub.url}api/health trước — phải thấy {"ok":true}.`);
+  console.log(`  Không mở được trên điện thoại thì gần như luôn là 1 trong 3:`);
+  console.log(`    1. điện thoại dùng 4G / khác wifi (bật wifi cùng mạng)`);
+  console.log(`    2. router bật "client isolation" (cách ly thiết bị) — tắt trong cài đặt wifi`);
+  console.log(`    3. cảnh báo chứng chỉ bị bỏ qua — bấm Nâng cao → Vẫn tiếp tục`);
   console.log(`\n  Ctrl+C để dừng. Đừng chia sẻ link này ra ngoài lớp.\n`);
 }

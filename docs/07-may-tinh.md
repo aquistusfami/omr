@@ -47,6 +47,9 @@ thoại và bị xoá khỏi thanh địa chỉ ngay, nên lần sau chỉ cần
 - **iPhone/Safari** sẽ cảnh báo chứng chỉ ("This Connection Is Not Private") vì chứng chỉ
   tự ký: bấm *Show Details → visit this website*. Phải làm bước này thì trình duyệt mới
   cho phép mở camera. Cảnh báo sẽ lặp lại mỗi lần mở tab mới.
+- Chứng chỉ phải chứa **đúng địa chỉ IP** trong `subjectAltName`, nếu không iPhone từ chối
+  thẳng (không hiện nút "tiếp tục", trang quay mãi). Hub tự tạo lại chứng chỉ khi IP máy tính
+  đổi — nếu vừa đổi wifi mà điện thoại không vào được, xoá `data/omr/.cert.json` rồi chạy lại.
 - **Android/Chrome**: *Advanced → Proceed*.
 - Chứng chỉ được tạo một lần và lưu ở `data/omr/.cert.json`, nên không phải chấp nhận lại
   sau mỗi lần khởi động hub (trừ khi đổi IP máy tính).
@@ -128,6 +131,9 @@ Khi đó dùng **CSV / Excel / JSON** trong hàng nút để mang dữ liệu đ
 
 ## 7. Giới hạn đã biết
 
+- Điện thoại phải **cùng wifi** với máy tính. Nhiều router bật "client isolation" (cách ly
+  thiết bị) hoặc tách băng tần 2.4/5 GHz thành hai mạng — khi đó điện thoại không thấy máy
+  tính dù cả hai đều "có mạng". Đây là nguyên nhân số một của "mở link quay mãi".
 - Hub là một tiến trình Node chạy tay; không có dịch vụ nền, không tự khởi động lại. Tắt
   terminal là tắt hub (dữ liệu đã ghi vẫn còn).
 - Không có xác thực người dùng, không có nhiều tài khoản: một lớp = một lần chạy.
