@@ -250,6 +250,8 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
       port: Number(arg("port", 8443)),
       dir: arg("dir", undefined),
       http: process.argv.includes("--http"),
+      // --local: only the machine itself (used with "adb reverse", see tools/usb.sh)
+      host: process.argv.includes("--local") ? "127.0.0.1" : "0.0.0.0",
     });
   } catch (error) {
     if (error?.code === "EADDRINUSE") {

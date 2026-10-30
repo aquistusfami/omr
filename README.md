@@ -143,8 +143,12 @@ Chi tiết, cơ chế đồng bộ và **những gì được/không được b�
 duyệt trong Zalo/Messenger thường từ chối chứng chỉ tự ký), cùng wifi (không phải 4G), router
 không bật cách ly thiết bị, và bấm qua cảnh báo chứng chỉ.
 
-Không dùng được LAN thì vẫn có đường khác: bấm **Gói .zip** trên điện thoại, gửi file sang máy
-tính, rồi `python3 tools/report.py --dir omr-2026-10-24.zip`. Gói chứa cả đáp án và ảnh phiếu.
+Không dùng được LAN thì có hai đường khác:
+
+- **Android + cáp USB**: `tools/usb.sh` — không wifi, không chứng chỉ, camera vẫn chạy
+  (`localhost` là secure context, `adb reverse` đưa phiếu về máy tính ngay).
+- **Gói .zip**: bấm trên điện thoại, gửi file sang máy tính, rồi
+  `python3 tools/report.py --dir omr-2026-10-24.zip`. Gói chứa cả đáp án và ảnh phiếu.
 
 ## Công cụ
 
@@ -155,3 +159,4 @@ tính, rồi `python3 tools/report.py --dir omr-2026-10-24.zip`. Gói chứa c�
 - `make_fixtures.py` — sinh ảnh phiếu đã tô (nắn phối cảnh, sáng lệch, nhiễu) để test và đo độ chính xác.
 - `report.py` — đọc thư mục dữ liệu của hub, tính điểm theo `key.json`, xuất Excel 4 sheet.
 - `web/tools/hub.mjs` — máy chủ LAN: phục vụ app, nhận phiếu, ghi `data/omr/`.
+- `usb.sh` — nối điện thoại Android bằng cáp USB qua `adb reverse` (không cần wifi, không chứng chỉ).

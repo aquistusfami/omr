@@ -26,7 +26,40 @@ qua internet**, và những gì được/không được bảo vệ.
 Không có bước nào gọi ra internet. Máy tính không mở cổng nào khác ngoài cổng hub
 (mặc định 8443), và chỉ trong LAN.
 
-## 2. Chạy
+## 2. Ba cách nối điện thoại với máy tính
+
+Chọn theo cột "cần gì" — cột cuối là thứ quyết định khi wifi trường chặn.
+
+| Cách | Cần gì | Camera | Cảnh báo chứng chỉ | Wifi hỏng vẫn chạy |
+|---|---|---|---|---|
+| **Cáp USB** (Android) | `adb` + bật gỡ lỗi USB | ✅ | không có | ✅ |
+| **Wifi LAN** (hub) | cùng wifi, router không cách ly thiết bị | ✅ | phải bấm qua | ❌ |
+| **Gói .zip** | không cần gì | — | không có | ✅ |
+
+### 2a. Cáp USB — chắc chắn nhất (Android)
+
+```bash
+tools/usb.sh
+```
+
+Script tự build, chạy hub chỉ nghe `127.0.0.1`, rồi `adb reverse` để `localhost` trên điện
+thoại trỏ về máy tính. Mở `http://localhost:8443/?t=...` trên điện thoại.
+
+- Không qua wifi: không bị "cách ly thiết bị", không cần cùng mạng, không mất dữ liệu khi wifi chập.
+- **Không có chứng chỉ tự ký**, vì `localhost` được trình duyệt coi là secure context — camera
+  vẫn mở bình thường.
+- Hub chỉ nghe `127.0.0.1` nên **không thiết bị nào khác trong mạng chạm được vào nó** (tôi đã
+  thử: gọi từ IP LAN bị từ chối, từ `127.0.0.1` trả 200).
+- Cần bật *Tuỳ chọn nhà phát triển → Gỡ lỗi USB* một lần. Script in hướng dẫn nếu chưa thấy máy.
+
+Chỉ áp dụng cho **Android**. iPhone không có `adb`.
+
+### 2b. Wifi LAN
+
+Chạy `npm run hub`, mở link https. Đây là cách duy nhất không cần cáp, nhưng phụ thuộc mạng
+và vẫn phải bấm qua cảnh báo chứng chỉ một lần mỗi phiên trình duyệt.
+
+## 3. Chạy
 
 ```bash
 cd web
@@ -54,7 +87,7 @@ thoại và bị xoá khỏi thanh địa chỉ ngay, nên lần sau chỉ cần
 - Chứng chỉ được tạo một lần và lưu ở `data/omr/.cert.json`, nên không phải chấp nhận lại
   sau mỗi lần khởi động hub (trừ khi đổi IP máy tính).
 
-## 3. Đồng bộ hoạt động thế nào
+## 4. Đồng bộ hoạt động thế nào
 
 - Mỗi phiếu chấm xong được ghi vào IndexedDB **trước**, rồi mới đẩy lên hub. Trạng thái
   `sent` chỉ bật khi hub trả `200`.
@@ -68,7 +101,7 @@ thoại và bị xoá khỏi thanh địa chỉ ngay, nên lần sau chỉ cần
 
 Phiếu **bị từ chối** cũng được gửi (để biết còn tờ nào chưa chấm được).
 
-## 4. Báo cáo
+## 5. Báo cáo
 
 ```bash
 python3 tools/report.py                       # data/omr → data/omr/bao-cao.xlsx
@@ -89,7 +122,7 @@ File Excel có 4 sheet:
 Điểm **không được lưu** trong dữ liệu; `report.py` tính lại từ `key.json` mỗi lần chạy.
 Sửa đáp án rồi chạy lại là toàn bộ điểm đổi theo.
 
-## 5. Bảo mật: được gì và không được gì
+## 6. Bảo mật: được gì và không được gì
 
 Giả định: 500 phiếu là dữ liệu cá nhân của học sinh, không được ra ngoài.
 
@@ -123,7 +156,7 @@ Giả định: 500 phiếu là dữ liệu cá nhân của học sinh, không đ
 riêng hoặc xoá theo quy định của trường; trên điện thoại bấm **Xoá hết** sau khi đã xác
 nhận `đã gửi N/N`.
 
-## 6. LAN không dùng được: xuất gói .zip
+## 7. Không nối được máy tính: xuất gói .zip
 
 Không phải lúc nào điện thoại cũng thấy được máy tính (wifi trường bật cách ly thiết bị, dùng
 4G, hoặc trình duyệt trong app chat từ chối chứng chỉ tự ký). Khi đó bỏ hub, dùng gói:
@@ -144,13 +177,13 @@ python3 tools/report.py --dir omr-2026-10-24.zip -o bao-cao.xlsx
 Gói này cũng là **bản lưu trữ** của một buổi chấm: một file, mở được bằng `unzip`, không phụ
 thuộc app hay database của điện thoại. Nên xuất cuối mỗi buổi dù có dùng hub hay không.
 
-## 7. Khi không có máy tính
+## 8. Khi không có máy tính
 
 App vẫn chạy độc lập (mở từ GitHub Pages hoặc `npm run dev`) và lưu trong điện thoại.
 Khi đó dùng **CSV / Excel / JSON** trong hàng nút để mang dữ liệu đi, và không có
 `report.py`. Panel "Gửi về máy tính" tự ẩn khi trang không được phục vụ bởi hub.
 
-## 8. Giới hạn đã biết
+## 9. Giới hạn đã biết
 
 - Điện thoại phải **cùng wifi** với máy tính. Nhiều router bật "client isolation" (cách ly
   thiết bị) hoặc tách băng tần 2.4/5 GHz thành hai mạng — khi đó điện thoại không thấy máy

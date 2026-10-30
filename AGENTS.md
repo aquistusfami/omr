@@ -84,6 +84,7 @@ python3 tools/report.py --dir fixtures/sample-run -o /tmp/bao-cao.xlsx  # CI cũ
 | `web/src/sync.ts` | gửi phiếu + đáp án lên hub (token, hàng đợi, thử lại) |
 | `web/src/main.ts` | UI: hai chế độ, banner, bíp, danh sách, xuất file |
 | `web/tools/hub.mjs` | máy chủ LAN: phục vụ app, nhận phiếu/đáp án, ghi `data/omr/` |
+| `tools/usb.sh` | cáp USB: hub chỉ nghe 127.0.0.1 + `adb reverse` cho Android |
 | `tools/report.py` | Excel 4 sheet từ dữ liệu của hub |
 | `data/` | **gitignored**: dữ liệu chấm thật do hub ghi (jsonl + ảnh + đáp án) |
 | `docs/` | kiến trúc, định dạng template, thuật toán, vận hành, roadmap, hub |
