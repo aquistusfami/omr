@@ -44,25 +44,28 @@ export function parseKeys(text: string): { keys: Record<string, Key>; errors: st
     const raw = line.trim();
     if (!raw || raw.startsWith("#")) return;
 
-    const code = raw.match(/^\d{3}/)?.[0];
+    // the code must start the line and be followed by whitespace: "123. 501 ..."
+    // (a pasted STT column) must fail loudly instead of grading 501's answers
+    // under code 123
+    const code = raw.match(/^(\d{3})\s/)?.[1];
     if (!code) {
-      errors.push(`dòng ${i + 1}: thiếu mã đề 3 số`);
+      errors.push(`dòng ${i + 1}: phải bắt đầu bằng mã đề 3 số rồi dấu cách`);
       return;
     }
     const letters = raw
-      .slice(raw.indexOf(code) + 3)
+      .slice(3)
       .toUpperCase()
       .replace(/Đ/g, "D")
       .replace(/[^A-DS]/g, "");
 
     const rest = letters.length - 10;
-    if (rest < 5 || rest % 5 !== 0 || rest / 5 > 6) {
+    const perQuestion = rest / 5;
+    if (rest < 5 || rest % 5 !== 0 || (perQuestion !== 4 && perQuestion !== 6)) {
       errors.push(
-        `dòng ${i + 1}: cần 10 ký tự phần I + số ý phần II (mỗi câu 4 hoặc 6 ý), đang có ${letters.length}`,
+        `dòng ${i + 1}: cần 10 ký tự phần I + 5 câu phần II, mỗi câu 4 hoặc 6 ý (20 hoặc 30 ký tự), đang có ${letters.length}`,
       );
       return;
     }
-    const perQuestion = rest / 5;
     if (/[^A-D]/.test(letters.slice(0, 10))) {
       errors.push(`dòng ${i + 1}: phần I chỉ nhận A–D`);
       return;

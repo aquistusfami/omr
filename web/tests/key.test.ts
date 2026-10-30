@@ -45,6 +45,19 @@ describe("parseKeys", () => {
     expect(errors[0]).toContain("dòng 1");
   });
 
+  it("refuses anything but 4 or 6 statements per question", () => {
+    const five = "501 " + "A".repeat(10) + "D".repeat(25); // 5 statements each
+    const { errors } = parseKeys(five);
+    expect(errors[0]).toMatch(/4 hoặc 6/);
+  });
+
+  it("refuses a line that starts with something other than the exam code", () => {
+    // pasted STT column: must not grade 501's answers under code 123
+    expect(parseKeys(`123. ${KEY_TEXT}`).errors[0]).toMatch(/mã đề 3 số/);
+    // 4-digit code from a spreadsheet must not be silently cut to 050
+    expect(parseKeys("0501 " + "A".repeat(10) + "D".repeat(30)).errors[0]).toMatch(/mã đề 3 số/);
+  });
+
   it("ignores blank lines and comments", () => {
     const { keys, errors } = parseKeys(`# mã đề 501\n\n${KEY_TEXT}\n`);
     expect(errors).toEqual([]);

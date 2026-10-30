@@ -64,7 +64,9 @@ function loadKeyConfig(): KeyConfig {
       text: typeof saved.text === "string" ? saved.text : "",
       p1: Number.isFinite(saved.p1) ? Number(saved.p1) : DEFAULT_KEY.p1,
       p2: Number.isFinite(saved.p2) ? Number(saved.p2) : DEFAULT_KEY.p2,
-      mode: saved.mode === "all" ? "all" : "split",
+      // anything that is not an explicit "split" must be the school default
+      // (all-or-nothing), not silently the looser rule
+      mode: saved.mode === "split" ? "split" : "all",
     };
   } catch {
     return { ...DEFAULT_KEY };
@@ -161,9 +163,12 @@ function setBanner(kind: "wait" | "ok" | "bad", text: string, detail?: string): 
 }
 
 function details(saved: store.SheetRecord): string {
+  // the printed form has 6 bubbles per PHẦN II question; a 4-statement exam
+  // would otherwise report 10 "cần xem" on every sheet
+  const flags = relevantFlags(saved, keys);
   return (
     `${saved.studentId} · đề ${saved.examCode}` +
-    (saved.flags.length ? ` · ${saved.flags.length} ô cần xem` : "") +
+    (flags.length ? ` · ${flags.length} ô cần xem` : "") +
     (saved.duplicate ? " · trùng mã SV" : "")
   );
 }
@@ -191,7 +196,9 @@ function toRecord(r: GradeResult) {
     examCode: r.examCode,
     p1: Object.fromEntries(Object.entries(r.p1).map(([q, u]) => [q, u.value])),
     p2: Object.fromEntries(
-      Object.entries(r.p2).map(([q, u]) => [q, u.values.map((v) => v || "?").join("")]),
+      // keep "" for a blank: "?" means two bubbles filled and must stay
+      // distinguishable in the CSV
+      Object.entries(r.p2).map(([q, u]) => [q, u.values.join("")]),
     ),
     flags: r.flags,
     anchors: r.anchors,
@@ -214,12 +221,25 @@ async function flush(): Promise<void> {
   if (flushing || !sync.state().connected) return;
   flushing = true;
   try {
-    for (const row of await store.unsent(20)) {
-      if (!row.id) continue;
-      const blob = await store.thumb(row.id);
-      if (await sync.pushSheet(row, blob)) await store.markSent(row.id);
-      else break;
+    for (let batch = 0; batch < 5; batch++) {
+      const rows = await store.unsent(20);
+      if (!rows.length) break;
+      let sent = 0;
+      for (const row of rows) {
+        if (!row.id) continue;
+        const blob = await store.thumb(row.id);
+        if (!(await sync.pushSheet(row, blob))) {
+          // the hub is gone; anything not sent stays queued for next time
+          return;
+        }
+        await store.markSent(row.id);
+        sent++;
+      }
+      if (sent < rows.length) break;
     }
+  } catch {
+    // a network/IndexedDB error must never break the caller (boot still renders
+    // the list, a failed upload just leaves rows unsent)
   } finally {
     flushing = false;
     updateHub();
@@ -575,7 +595,13 @@ $("csv").addEventListener("click", () => void exportAs("csv"));
 $("xlsx").addEventListener("click", () => void exportAs("xlsx"));
 $("json").addEventListener("click", () => void exportPackage());
 $("clear").addEventListener("click", async () => {
-  if (!confirm("Xoá toàn bộ kết quả đã chấm?")) return;
+  const rows = await store.all();
+  const unsent = rows.filter((r) => !r.sent && r.id).length;
+  const warning =
+    `Xoá toàn bộ ${rows.length} phiếu đã chấm trên điện thoại?` +
+    (unsent ? `\n\n${unsent} phiếu CHƯA gửi lên máy tính — xoá là mất.` : "") +
+    "\n\nHãy chắc đã xuất file hoặc đã gửi hết.";
+  if (!confirm(warning)) return;
   await store.clear();
   await render();
 });

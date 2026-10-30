@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import statistics
 import sys
 import zipfile
@@ -67,14 +68,37 @@ def score(row: dict, key: dict) -> tuple[float, int, int] | None:
     for q in range(P2_COUNT):
         want = answers["p2"][q] if q < len(answers.get("p2", [])) else ""
         got = (row.get("p2") or {}).get(str(P2_FIRST + q), "")
-        matched = sum(1 for i in range(6) if i < len(want) and i < len(got) and want[i] == got[i])
-        if len(want) == 6 and matched == 6:
+        # number of statements is whatever the key says (4 or 6), never the 6
+        # printed on the form - otherwise a 4-statement exam scores 0
+        wanted = len(want)
+        if not wanted:
+            continue
+        matched = sum(1 for i in range(wanted) if i < len(got) and want[i] == got[i])
+        correct_p2 += matched
+        if split:
+            part_two += w2 * matched / wanted
+        elif matched == wanted:
             part_two += w2
-            correct_p2 += 1
-        elif split:
-            part_two += w2 * matched / 6
 
     return round(correct_p1 * w1 + part_two, 2), correct_p1, correct_p2
+
+
+FLAG = re.compile(r"^cau(1[1-5])\.([A-F]):")
+
+
+def relevant_flags(row: dict, answers: dict | None) -> list[str]:
+    """Drop statements the exam does not have; the form prints 6 bubbles always."""
+    flags = row.get("flags") or []
+    if not answers:
+        return flags
+    out = []
+    for flag in flags:
+        m = FLAG.match(flag)
+        if m and len(answers["p2"][int(m.group(1)) - P2_FIRST]) <= ord(m.group(2)) - 65:
+            continue
+        out.append(flag)
+    return out
+
 
 
 def table(rows: list[dict], key: dict) -> tuple[list[str], list[list]]:
@@ -95,7 +119,8 @@ def table(rows: list[dict], key: dict) -> tuple[list[str], list[list]]:
         line += [(row.get("p1") or {}).get(str(i), "") for i in range(1, P1_COUNT + 1)]
         for q in range(P2_COUNT):
             got = (row.get("p2") or {}).get(str(P2_FIRST + q), "")
-            line += [c if c not in ("", "?") else "" for c in (got + "------")[:6]]
+            # "?" means two bubbles filled: keep it, it is not a blank
+            line += [c if c not in ("", "-") else "" for c in (got + "------")[:6]]
         line += [
             s[0] if s else "",
             s[1] if s else "",
@@ -103,8 +128,10 @@ def table(rows: list[dict], key: dict) -> tuple[list[str], list[list]]:
             "x" if row.get("duplicate") else "",
             "" if row.get("ok") else f"REJECT:{row.get('reason', '')}",
         ]
-        if row.get("ok") and row.get("flags"):
-            line[-1] = " ".join(row["flags"])
+        answers = (key.get("keys") or {}).get(row.get("examCode") or "")
+        flags = relevant_flags(row, answers)
+        if row.get("ok") and flags:
+            line[-1] = " ".join(flags)
         body.append(line)
     return head, body
 
@@ -154,34 +181,46 @@ def write_xlsx(path: Path, rows: list[dict], key: dict) -> None:
     code.append(["ma de", "so phieu", "diem TB", "cao nhat", "thap nhat", "so o can xem"])
     for cell in code[1]:
         cell.font = Font(bold=True)
-    for exam in sorted({r.get("examCode", "") for r in rows}):
+    for exam in sorted({r.get("examCode", "") for r in rows if r.get("examCode")}):
         group = [r for r in rows if r.get("examCode") == exam]
         marks = [s[0] for s in (score(r, key) for r in group) if s]
+        answers = (key.get("keys") or {}).get(exam)
         code.append(
             [
-                exam or "?",
+                exam,
                 len(group),
                 round(statistics.mean(marks), 2) if marks else "",
                 max(marks) if marks else "",
                 min(marks) if marks else "",
-                sum(1 for r in group if r.get("flags") or not r.get("ok")),
+                sum(1 for r in group if relevant_flags(r, answers) or not r.get("ok")),
             ]
         )
 
     sus = wb.create_sheet("Nghi van")
-    sus.append(["ma_sv", "ma_de", "ly do", "anh"])
+    sus.append(["ma_sv", "ma_de", "diem", "ly do", "anh"])
     for cell in sus[1]:
         cell.font = Font(bold=True)
     for r in rows:
-        if r.get("ok") and not r.get("flags") and not r.get("duplicate"):
+        answers = (key.get("keys") or {}).get(r.get("examCode") or "")
+        flags = relevant_flags(r, answers)
+        if r.get("ok") and not flags and not r.get("duplicate"):
             continue
         reasons = []
         if not r.get("ok"):
-            reasons.append(f"tu choi: {r.get('reason', '')}")
-        reasons += r.get("flags") or []
+            reasons.append(f"REJECT:{r.get('reason', '')}")
+        reasons += flags
         if r.get("duplicate"):
             reasons.append("trung ma SV")
-        sus.append([r.get("studentId", ""), r.get("examCode", ""), ", ".join(reasons), f"thumbs/{r.get('uid')}.jpg"])
+        s = score(r, key)
+        sus.append(
+            [
+                r.get("studentId", ""),
+                r.get("examCode", ""),
+                s[0] if s else "",
+                " ".join(reasons),
+                f"thumbs/{r.get('uid')}.jpg",
+            ]
+        )
 
     wb.save(path)
 
