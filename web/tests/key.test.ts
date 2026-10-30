@@ -45,10 +45,16 @@ describe("parseKeys", () => {
     expect(errors[0]).toContain("dòng 1");
   });
 
-  it("refuses anything but 4 or 6 statements per question", () => {
+  it("accepts whatever statement count the key says", () => {
     const five = "501 " + "A".repeat(10) + "D".repeat(25); // 5 statements each
-    const { errors } = parseKeys(five);
-    expect(errors[0]).toMatch(/4 hoặc 6/);
+    const { keys, errors } = parseKeys(five);
+    expect(errors).toEqual([]);
+    expect(keys["501"].p2.map((s) => s.length)).toEqual([5, 5, 5, 5, 5]);
+  });
+
+  it("refuses more statements than the form prints", () => {
+    const seven = "501 ADCBBADDAC DDDDDDD DDDDDD DDDDDD DDDDDD DDDDDD";
+    expect(parseKeys(seven).errors[0]).toMatch(/câu 11 có 7 ý/);
   });
 
   it("refuses a line that starts with something other than the exam code", () => {
@@ -160,7 +166,82 @@ describe("phần II có 4 ý", () => {
     expect(relevantFlags(row, four)).toEqual(["cau11.E:blank"]);
   });
 
-  it("rejects a count that cannot split into 5 equal questions", () => {
-    expect(parseKeys("501 ADCBBADDAC DSDSSS SDSDDS SDSDSD DSSDSS DDSDD").errors[0]).toMatch(/phần I \+/);
+});
+
+describe("phần II có 5 ý", () => {
+  const FIVE = "501 ADCBBADDAC DSDSD SDSSD DSDSS SDSSD DDDDD";
+  const five = parseKeys(FIVE).keys;
+  const all = (): KeyConfig => ({ text: FIVE, p1: 2, p2: 2, mode: "all" });
+
+  it("parses 5 statements per question", () => {
+    expect(parseKeys(FIVE).errors).toEqual([]);
+    expect(five["501"].p2.map((s) => s.length)).toEqual([5, 5, 5, 5, 5]);
+  });
+
+  it("mixes 6-statement questions with a 5-statement last question", () => {
+    const { keys, errors } = parseKeys("501 ADCBBADDAC DSDSSS SDSDDS SDSDSD DSSDSS DDDDD");
+    expect(errors).toEqual([]);
+    expect(keys["501"].p2.map((s) => s.length)).toEqual([6, 6, 6, 6, 5]);
+  });
+
+  it("gives full marks when 6 bubbles are filled but only 5 are graded", () => {
+    const row = sheet({
+      p1: "ADCBBADDAC",
+      p2: ["DSDSD?", "SDSSD?", "DSDSS?", "SDSSD?", "DDDDD?"],
+    });
+    const s = score(row, five, all())!;
+    expect(s.total).toBe(30);
+    expect(s.correctP2).toBe(25);
+  });
+
+  it("still penalises a wrong graded statement", () => {
+    const row = sheet({
+      p1: "ADCBBADDAC",
+      p2: ["DSDSD?", "SDSSD?", "DSDSS?", "SDSSD?", "DDDDS?"],
+    });
+    expect(score(row, five, all())!.total).toBe(28);
+  });
+
+  it("drops only the flag of the 6th bubble", () => {
+    const row = { ...sheet({ p1: "ADCBBADDAC", p2: [] }), flags: ["cau15.E:blank", "cau15.F:blank"] };
+    expect(relevantFlags(row, five)).toEqual(["cau15.E:blank"]);
+  });
+});
+
+describe("phần II trộn 4 và 6 ý", () => {
+  // q11-q14 have 6 statements, q15 has 4; the form still prints 6 bubbles
+  const MIXED = "501 ADCBBADDAC DSDSSS SDSDDS SDSDSD DSSDSS DDSD";
+  const mixed = parseKeys(MIXED).keys;
+  const all = (): KeyConfig => ({ text: MIXED, p1: 2, p2: 2, mode: "all" });
+
+  it("parses each question with its own statement count", () => {
+    expect(parseKeys(MIXED).errors).toEqual([]);
+    expect(mixed["501"].p2.map((s) => s.length)).toEqual([6, 6, 6, 6, 4]);
+  });
+
+  it("gives full marks when q15 has 6 bubbles but only 4 are graded", () => {
+    const row = sheet({
+      p1: "ADCBBADDAC",
+      p2: ["DSDSSS", "SDSDDS", "SDSDSD", "DSSDSS", "DDSDSS"],
+    });
+    const s = score(row, mixed, all())!;
+    expect(s.total).toBe(30);
+    expect(s.correctP2).toBe(28);
+  });
+
+  it("still penalises a wrong graded statement on the 4-statement question", () => {
+    const row = sheet({
+      p1: "ADCBBADDAC",
+      p2: ["DSDSSS", "SDSDDS", "SDSDSD", "DSSDSS", "DDSSSS"],
+    });
+    expect(score(row, mixed, all())!.total).toBe(28);
+  });
+
+  it("drops only the flags of bubbles outside each question", () => {
+    const row = {
+      ...sheet({ p1: "ADCBBADDAC", p2: [] }),
+      flags: ["cau15.D:blank", "cau15.E:blank", "cau15.F:blank", "cau11.F:blank"],
+    };
+    expect(relevantFlags(row, mixed)).toEqual(["cau15.D:blank", "cau11.F:blank"]);
   });
 });

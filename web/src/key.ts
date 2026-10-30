@@ -1,6 +1,6 @@
 import type { SheetRecord } from "./store";
 
-/** One exam code's answer key: 10 choices, then 5 questions x N statements (N = 4 or 6 in practice). */
+/** One exam code's answer key: 10 choices, then 5 questions x N statements (N = whatever the key says, up to 6). */
 export interface Key {
   p1: string[];
   p2: string[];
@@ -10,7 +10,7 @@ export interface KeyConfig {
   text: string;
   p1: number;
   p2: number;
-  /** "split": each of the 6 statements is worth p2/6; "all": only a full match scores */
+  /** "split": each statement of the question is worth p2/N; "all": only a full match scores */
   mode: "split" | "all";
 }
 
@@ -32,9 +32,9 @@ export const DEFAULT_KEY: KeyConfig = { text: "", p1: 2, p2: 2, mode: "all" };
  *   501 ADCBBADDAC DSDSDS SDSDDS ...
  *
  * The first token is the 3-digit code, then 10 answers for PHẦN I, then the
- * statements of PHẦN II in order (5 questions x 4 or 6 statements). The form has
- * 6 bubbles per question, but an exam may only ask 4 - the key decides how many
- * are graded, so a 4-statement key needs 10 + 20 = 30 letters. "Đ" counts as D.
+ * statements of PHẦN II in order. The form has 6 bubbles per question, but the
+ * key decides how many are graded (1-6 in practice 4 or 6). Each question is its
+ * own token, so one exam may mix counts. "Đ" counts as D.
  */
 export function parseKeys(text: string): { keys: Record<string, Key>; errors: string[] } {
   const keys: Record<string, Key> = {};
@@ -52,17 +52,43 @@ export function parseKeys(text: string): { keys: Record<string, Key>; errors: st
       errors.push(`dòng ${i + 1}: phải bắt đầu bằng mã đề 3 số rồi dấu cách`);
       return;
     }
-    const letters = raw
-      .slice(3)
-      .toUpperCase()
-      .replace(/Đ/g, "D")
-      .replace(/[^A-DS]/g, "");
+    const clean = (s: string): string =>
+      s.toUpperCase().replace(/Đ/g, "D").replace(/[^A-DS]/g, "");
 
+    // one token per PHẦN II question, so one exam may mix counts:
+    // 501 <10 answers> <1-6> x5. Without this, a 4-statement question forces
+    // the whole key to 4 and the 6-statement ones lose 2 ý.
+    const tokens = raw.slice(3).trim().split(/\s+/);
+    if (tokens.length === 6) {
+      const p1 = clean(tokens[0]);
+      if (p1.length !== 10 || /[^A-D]/.test(p1)) {
+        errors.push(`dòng ${i + 1}: phần I cần đúng 10 chữ A–D`);
+        return;
+      }
+      const p2: string[] = [];
+      for (let q = 0; q < 5; q++) {
+        const part = clean(tokens[q + 1]);
+        if (part.length < 1 || part.length > 6) {
+          errors.push(`dòng ${i + 1}: câu ${11 + q} có ${part.length} ý (cần 1-6 ý)`);
+          return;
+        }
+        if (/[^DS]/.test(part)) {
+          errors.push(`dòng ${i + 1}: câu ${11 + q} chỉ nhận D/S`);
+          return;
+        }
+        p2.push(part);
+      }
+      keys[code] = { p1: [...p1], p2 };
+      return;
+    }
+
+    // no spaces between the PHẦN II groups: all five questions must be equal
+    const letters = clean(raw.slice(3));
     const rest = letters.length - 10;
     const perQuestion = rest / 5;
-    if (rest < 5 || rest % 5 !== 0 || (perQuestion !== 4 && perQuestion !== 6)) {
+    if (rest < 5 || rest % 5 !== 0 || perQuestion > 6) {
       errors.push(
-        `dòng ${i + 1}: cần 10 ký tự phần I + 5 câu phần II, mỗi câu 4 hoặc 6 ý (20 hoặc 30 ký tự), đang có ${letters.length}`,
+        `dòng ${i + 1}: cần 10 ký tự phần I + 5 câu phần II, mỗi câu 1-6 ý, đang có ${letters.length}`,
       );
       return;
     }

@@ -91,7 +91,7 @@ function showKeyStatus(): void {
     ? errors.slice(0, 3).join(" · ")
     : codes
       ? `${codes} mã đề · ${keyCfg.p1}đ/câu I · ${keyCfg.p2}đ/câu II (${
-          keyCfg.mode === "all" ? "đúng cả 6 ý" : "chia đều 6 ý"
+          keyCfg.mode === "all" ? "đúng hết các ý" : "chia đều theo ý"
         })`
       : "Chưa có đáp án — phiếu vẫn được đọc, chỉ chưa có điểm.";
 }
@@ -414,21 +414,25 @@ async function render(): Promise<void> {
   const bad = rows.filter((r) => !r.ok).length;
   const flagged = rows.filter((r) => r.ok && relevantFlags(r, keys).length).length;
   const dup = rows.filter((r) => r.duplicate).length;
+  const keyErrors = parseKeys(keyCfg.text).errors;
   const hasKey = Object.keys(keys).length > 0;
+  const hasKeyText = keyCfg.text.trim().length > 0;
   const scored = rows.map((r) => score(r, keys, keyCfg)).filter((s) => s !== null);
   const average = scored.length ? scored.reduce((a, s) => a + s.total, 0) / scored.length : 0;
   const sentCount = rows.filter((r) => r.sent).length;
 
-  statusEl.textContent =
-    `${rows.length} phiếu · ${flagged} có ô cần xem · ${bad} bị từ chối` +
-    (dup ? ` · ${dup} trùng mã SV` : "") +
-    (scored.length
-      ? ` · điểm TB ${average.toFixed(2)}/${(10 * keyCfg.p1 + 5 * keyCfg.p2).toFixed(0)}`
-      : "") +
-    (hasKey && scored.length < rows.length
-      ? ` · ${rows.length - scored.length} chưa có đáp án/điểm`
-      : "") +
-    (sync.state().active ? ` · đã gửi ${sentCount}/${rows.length}` : "");
+  statusEl.textContent = keyErrors.length
+    ? `Đáp án lỗi — chưa chấm được phiếu nào · ${keyErrors[0]}`
+    : `${rows.length} phiếu · ${flagged} có ô cần xem · ${bad} bị từ chối` +
+      (dup ? ` · ${dup} trùng mã SV` : "") +
+      (scored.length
+        ? ` · điểm TB ${average.toFixed(2)}/${(10 * keyCfg.p1 + 5 * keyCfg.p2).toFixed(0)}`
+        : "") +
+      (hasKey && scored.length < rows.length
+        ? ` · ${rows.length - scored.length} chưa có đáp án/điểm`
+        : "") +
+      (sync.state().active ? ` · đã gửi ${sentCount}/${rows.length}` : "");
+  statusEl.classList.toggle("bad", keyErrors.length > 0);
 
   const total = String(rows.length);
   if (countEl.textContent !== total) {
@@ -456,7 +460,7 @@ async function render(): Promise<void> {
           ${r.duplicate ? `<span class="dup">trùng</span>` : ""}
           <time class="muted">${new Date(r.at).toLocaleTimeString("vi-VN")}</time>
         </div>
-        ${hasKey ? `<span class="score">${s ? s.total.toFixed(2) : "—"}</span>` : ""}
+        ${hasKeyText ? `<span class="score">${keyErrors.length ? "lỗi ĐA" : s ? s.total.toFixed(2) : "—"}</span>` : ""}
         <div class="answers">${
           r.ok
             ? [...Object.entries(r.p1).map(([q, v]) => `${q}${v || "·"}`),

@@ -80,8 +80,9 @@
               placeholder="501 ADCBBADDAC DSDSSS SDSDDS SDSDSD DSSDSS DDSDDS"></textarea>
           </label>
           <p class="hint">
-            Mỗi dòng một mã đề: mã 3 số, rồi 40 ký tự — 10 đáp án A–D của phần I, tiếp là 30 ý
-            Đ/S của 5 câu phần II. Cách nhau bằng dấu cách tuỳ ý, chữ "Đ" hiểu là D.
+            Mỗi dòng một mã đề: mã 3 số, rồi 10 đáp án A–D của phần I, tiếp là 5 nhóm ý Đ/S
+            của phần II — mỗi câu đúng số ý trong đáp án (tối đa 6), cách nhau bằng dấu cách.
+            Chữ "Đ" hiểu là D.
           </p>
           <div class="fields">
             <label class="field">
@@ -95,8 +96,8 @@
             <label class="field">
               <span>Cách tính phần II</span>
               <select id="p2-mode">
-                <option value="split">chia đều 6 ý</option>
-                <option value="all">đúng cả 6 ý mới có điểm</option>
+                <option value="split">chia đều theo số ý</option>
+                <option value="all">đúng hết các ý mới có điểm</option>
               </select>
             </label>
           </div>

@@ -457,6 +457,11 @@ body {
   color: var(--ink-2);
 }
 
+.status.bad {
+  color: var(--bad);
+  font-weight: 600;
+}
+
 .list {
   border-top: 1px solid var(--line);
 }

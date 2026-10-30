@@ -18,10 +18,11 @@ Dành cho người chấm, không cần biết code.
    thoại sẽ cảnh báo chứng chỉ tự ký — bấm "Nâng cao" → "Vẫn tiếp tục". Nếu không mở được camera,
    dùng "Chụp thủ công" (vẫn chấm được, chỉ chậm hơn).
 6. **Nhập đáp án** (mục "Đáp án & điểm", mở sẵn khi chưa có đáp án): mỗi mã đề một dòng, gồm mã
-   3 số rồi 10 đáp án A–D phần I và các ý Đ/S phần II — **câu 4 ý thì 20 ký tự, câu 6 ý thì 30**.
+   3 số rồi 10 đáp án A–D phần I và 5 nhóm ý Đ/S phần II — **mỗi câu đúng số ý trong đáp án
+   (tối đa 6; trường thường dùng 4 hoặc 6), có thể trộn**.
    Dán thẳng từ Excel được (dấu
    tab, dấu cách, chữ thường, "Đ" đều nhận). Mặc định đúng thang của trường: **2 điểm/câu, phải đúng 100% mới có điểm** (phần
-   II là cả 6 ý), tổng 30 điểm. Vẫn sửa được trọng số nếu môn khác dùng thang khác. Không có đáp
+   II là đủ các ý của câu), tổng 30 điểm. Vẫn sửa được trọng số nếu môn khác dùng thang khác. Không có đáp
    án thì vẫn chấm và xuất được, chỉ trống cột điểm.
 7. **Chạy thử 10 phiếu** đã tô sẵn, có đáp án biết trước. Nếu sai một ô nào, dừng lại: xem
    `docs/03-pipeline.md` mục "Chế độ hỏng đã biết" trước khi chấm thật.
