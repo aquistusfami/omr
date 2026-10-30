@@ -29,7 +29,7 @@
         ├─ image.ts     warp về canvas 1000 × 961 @ 1.5 px/đơn vị
         │
         ├─ grade.ts     lấy mẫu 240 ô → phân loại theo từng "đơn vị trả lời"
-        │               → 52 đơn vị: 9 mã SV + 3 mã đề + 10 câu A–D + 30 ý Đ/S
+        │               → 52 đơn vị: 9 mã SV + 3 mã đề + 10 câu A–D + 6 ý Đ/S × 5 (đề 4 ý thì 2 ô cuối bỏ trống)
         │
         ├─ scan.ts      máy trạng thái: nhận một lần / nhấc phiếu mới nhận tiếp
         │

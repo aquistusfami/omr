@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { DEFAULT_KEY, parseKeys, score, type KeyConfig } from "../src/key";
+import { DEFAULT_KEY, parseKeys, relevantFlags, score, type KeyConfig } from "../src/key";
 import type { SheetRecord } from "../src/store";
 
 const KEY_TEXT = "501 ADCBBADDAC DSDSSS SDSDDS SDSDSD DSSDSS DDSDDS";
@@ -103,5 +103,51 @@ describe("score", () => {
   it("treats a blank answer as wrong", () => {
     const s = score(sheet({ p1: "ADCBBADDAC", p2: ["DSDSS?", "SDSDDS", "SDSDSD", "DSSDSS", "DDSDDS"] }), keys, cfg())!;
     expect(s.correctP2).toBe(29);
+  });
+});
+
+describe("phần II có 4 ý", () => {
+  // 10 + 5x4 = 30 ký tự: câu 11 DSDS, 12 SDSS, 13 DSDS, 14 SDSS, 15 DSDS
+  const FOUR = "501 ADCBBADDAC DSDS SDSS DSDS SDSS DSDS";
+  const four = parseKeys(FOUR).keys;
+  const all = (): KeyConfig => ({ text: FOUR, p1: 2, p2: 2, mode: "all" });
+
+  it("parses 4 statements per question", () => {
+    expect(parseKeys(FOUR).errors).toEqual([]);
+    expect(four["501"].p2).toEqual(["DSDS", "SDSS", "DSDS", "SDSS", "DSDS"]);
+  });
+
+  it("gives full marks when the 4 graded statements match", () => {
+    const row = sheet({ p1: "ADCBBADDAC", p2: ["DSDS", "SDSS", "DSDS", "SDSS", "DSDS"] });
+    expect(score(row, four, all())?.total).toBe(30);
+  });
+
+  it("ignores the 5th and 6th bubbles the exam does not have", () => {
+    const row = sheet({ p1: "ADCBBADDAC", p2: ["DSDSXX", "SDSSXX", "DSDSXX", "SDSSXX", "DSDSXX"] });
+    const result = score(row, four, all());
+    expect(result?.total).toBe(30);
+    expect(result?.correctP2).toBe(20);
+  });
+
+  it("still penalises a wrong graded statement", () => {
+    const row = sheet({ p1: "ADCBBADDAC", p2: ["DSDD", "SDSS", "DSDS", "SDSS", "DSDS"] });
+    expect(score(row, four, all())?.total).toBe(28);
+  });
+
+  it("drops flags for the bubbles the exam does not have", () => {
+    const row = {
+      ...sheet({ p1: "ADCBBADDAC", p2: ["DSDS??", "SDSS??", "DSDS??", "SDSS??", "DSDS??"] }),
+      flags: ["cau11.C:blank", "cau11.E:blank", "cau13.F:blank", "cau7:multi"],
+    };
+    expect(relevantFlags(row, four)).toEqual(["cau11.C:blank", "cau7:multi"]);
+  });
+
+  it("keeps every flag when there is no key for the exam code", () => {
+    const row = { ...sheet({ p1: "ADCBBADDAC", p2: [] }, "999"), flags: ["cau11.E:blank"] };
+    expect(relevantFlags(row, four)).toEqual(["cau11.E:blank"]);
+  });
+
+  it("rejects a count that cannot split into 5 equal questions", () => {
+    expect(parseKeys("501 ADCBBADDAC DSDSSS SDSDDS SDSDSD DSSDSS DDSDD").errors[0]).toMatch(/phần I \+/);
   });
 });

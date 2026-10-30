@@ -18,7 +18,8 @@ Dành cho người chấm, không cần biết code.
    thoại sẽ cảnh báo chứng chỉ tự ký — bấm "Nâng cao" → "Vẫn tiếp tục". Nếu không mở được camera,
    dùng "Chụp thủ công" (vẫn chấm được, chỉ chậm hơn).
 6. **Nhập đáp án** (mục "Đáp án & điểm", mở sẵn khi chưa có đáp án): mỗi mã đề một dòng, gồm mã
-   3 số rồi 40 ký tự — 10 đáp án A–D phần I, tiếp 30 ý Đ/S phần II. Dán thẳng từ Excel được (dấu
+   3 số rồi 10 đáp án A–D phần I và các ý Đ/S phần II — **câu 4 ý thì 20 ký tự, câu 6 ý thì 30**.
+   Dán thẳng từ Excel được (dấu
    tab, dấu cách, chữ thường, "Đ" đều nhận). Mặc định đúng thang của trường: **2 điểm/câu, phải đúng 100% mới có điểm** (phần
    II là cả 6 ý), tổng 30 điểm. Vẫn sửa được trọng số nếu môn khác dùng thang khác. Không có đáp
    án thì vẫn chấm và xuất được, chỉ trống cột điểm.
@@ -82,7 +83,7 @@ Mỗi phiếu ~8–10 giây.
    - **JSON**: bản đầy đủ để lưu trữ hoặc đưa sang công cụ khác.
 2. Lọc cột `can_kiem_tra` khác rỗng. Mỗi dòng là một phiếu cần xem:
    - `cau7:multi` — tô nhiều ô ở câu 7 (hoặc có mực nhưng không phân biệt được).
-   - `cau11C:blank` — ý C câu 11 không tô.
+   - `cau11.C:blank` — ý C câu 11 không tô (chỉ hiện với các ý có trong đáp án).
    - `student_id[3]:blank` — chữ số thứ 3 của mã sinh viên không đọc được (`?` trong file).
    - `exam_code[1]:blank` — chữ số thứ nhất của mã đề không đọc được.
 3. Với mỗi dòng đó, mở ảnh phiếu đã lưu trong app (xem mục dưới) và sửa trực tiếp trong Excel.

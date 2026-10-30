@@ -1,5 +1,4 @@
-import type { Key, KeyConfig, Score } from "./key";
-import { score } from "./key";
+import { relevantFlags, score, type Key, type KeyConfig, type Score } from "./key";
 import type { SheetRecord } from "./store";
 import type { Template } from "./types";
 
@@ -56,7 +55,7 @@ export function tableData(rows: SheetRecord[], tmpl: Template, scoring?: Scoring
     s ? String(s.correctP1) : "",
     s ? String(s.correctP2) : "",
     r.duplicate ? "x" : "",
-    r.ok ? r.flags.join(" ") : `REJECT:${r.reason ?? ""}`,
+    r.ok ? (scoring ? relevantFlags(r, scoring.keys) : r.flags).join(" ") : `REJECT:${r.reason ?? ""}`,
   ];
   });
   return { head, body };
@@ -84,10 +83,31 @@ export function toJson(rows: SheetRecord[], tmpl: Template, scoring?: Scoring): 
 
 export function download(name: string, data: Blob | string): void {
   const blob = typeof data === "string" ? new Blob(["\ufeff" + data], { type: "text/plain;charset=utf-8" }) : data;
+
+  // iPhone: the share sheet ("Lưu vào Tệp") is far more reliable than a blob
+  // download in Safari, and it works on iOS 15 where old iPhones are stuck.
+  try {
+    const file = new File([blob], name, { type: blob.type || "application/octet-stream" });
+    if (/iPhone|iPad|iPod/.test(navigator.userAgent) && navigator.canShare?.({ files: [file] })) {
+      void navigator.share({ files: [file] }).catch((error: Error) => {
+        if (error?.name !== "AbortError") saveLink(blob, name);
+      });
+      return;
+    }
+  } catch {
+    /* File/share not available: fall through to the plain download */
+  }
+  saveLink(blob, name);
+}
+
+function saveLink(blob: Blob, name: string): void {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
   a.download = name;
+  // Safari only follows a download link that is in the document
+  document.body.append(a);
   a.click();
+  a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }

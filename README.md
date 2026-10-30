@@ -80,7 +80,7 @@ Cập nhật 2026-10-24. Chi tiết và tiêu chí nghiệm thu: [docs/06-roadma
 | M2 — sửa ô ngay trong app | ⬜ |
 | M3 — nắn theo từng khối (phiếu cong) | ⬜ |
 | M4 — chặn trùng, xoá ảnh theo lô | 🟡 đã đánh dấu trùng, chưa chặn |
-| M5 — nhập đáp án, tính điểm, phổ điểm | 🟡 2đ/câu, đúng 100% mới có điểm (tổng 30); chưa có phổ điểm |
+| M5 — nhập đáp án, tính điểm, phổ điểm | 🟡 2đ/câu, đúng 100% mới có điểm (tổng 30), phần II nhận câu 4 hoặc 6 ý |
 | M6 — PWA offline, gộp nhiều điện thoại | ⬜ |
 
 **Đã đọc được phiếu thật.** Bộ 57 tờ scan A4 (ảnh 150 dpi, 1240×1754): 57/57 nhận, dùng 15–21
@@ -100,7 +100,8 @@ gradient trên–dưới và nét bút chì nhạt (đúng ba thứ đã làm h�
 2. **Chạy thử trên điện thoại thật** (~5 phút): mở https, cấp quyền camera, đặt 3–5 phiếu đã tô,
    kiểm tra bíp + banner xanh + nhấc phiếu ra mới nhận phiếu tiếp. Bố cục đã dựng bằng trình
    duyệt headless; phần chưa kiểm chứng là camera và quyền truy cập trên máy thật.
-3. **Nhập đáp án** trước khi chấm (mục "Đáp án & điểm"): mỗi mã đề một dòng 40 ký tự. Không có
+3. **Nhập đáp án** trước khi chấm (mục "Đáp án & điểm"): mỗi mã đề một dòng — 10 đáp án A–D rồi các
+   ý Đ/S (câu 4 ý = 20 ký tự, câu 6 ý = 30). Không có
    đáp án thì phiếu vẫn được đọc và xuất, chỉ trống cột điểm.
 4. **M1**: chấm tay 50 trong 57 tờ đã có (hoặc chụp thêm), so từng ô, đo 4 con số (ô sai, tỉ lệ
    từ chối, tỉ lệ cờ, giây/phiếu). Không đạt thì chỉnh ngưỡng trong `classify()` / `classifyColumn()`

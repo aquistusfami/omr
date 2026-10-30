@@ -1,6 +1,6 @@
 import type { SheetRecord } from "./store";
 
-/** One exam code's answer key: 10 choices, then 5 questions x 6 statements. */
+/** One exam code's answer key: 10 choices, then 5 questions x N statements (N = 4 or 6 in practice). */
 export interface Key {
   p1: string[];
   p2: string[];
@@ -23,7 +23,7 @@ export interface Score {
 }
 
 // Trường dùng thang 2 điểm/câu, phải đúng 100% câu mới có điểm: 10 câu phần I
-// và 5 câu phần II (cả 6 ý) = 30 điểm.
+// và 5 câu phần II (đúng hết các ý có trong đáp án) = 30 điểm.
 export const DEFAULT_KEY: KeyConfig = { text: "", p1: 2, p2: 2, mode: "all" };
 
 /**
@@ -31,8 +31,10 @@ export const DEFAULT_KEY: KeyConfig = { text: "", p1: 2, p2: 2, mode: "all" };
  *
  *   501 ADCBBADDAC DSDSDS SDSDDS ...
  *
- * The first token is the 3-digit code, then 40 letters read in order: 10 answers
- * for PHẦN I, then 30 for PHẦN II (5 questions x 6 statements). "Đ" counts as D.
+ * The first token is the 3-digit code, then 10 answers for PHẦN I, then the
+ * statements of PHẦN II in order (5 questions x 4 or 6 statements). The form has
+ * 6 bubbles per question, but an exam may only ask 4 - the key decides how many
+ * are graded, so a 4-statement key needs 10 + 20 = 30 letters. "Đ" counts as D.
  */
 export function parseKeys(text: string): { keys: Record<string, Key>; errors: string[] } {
   const keys: Record<string, Key> = {};
@@ -53,10 +55,14 @@ export function parseKeys(text: string): { keys: Record<string, Key>; errors: st
       .replace(/Đ/g, "D")
       .replace(/[^A-DS]/g, "");
 
-    if (letters.length !== 40) {
-      errors.push(`dòng ${i + 1}: cần 40 ký tự (10 + 30), đang có ${letters.length}`);
+    const rest = letters.length - 10;
+    if (rest < 5 || rest % 5 !== 0 || rest / 5 > 6) {
+      errors.push(
+        `dòng ${i + 1}: cần 10 ký tự phần I + số ý phần II (mỗi câu 4 hoặc 6 ý), đang có ${letters.length}`,
+      );
       return;
     }
+    const perQuestion = rest / 5;
     if (/[^A-D]/.test(letters.slice(0, 10))) {
       errors.push(`dòng ${i + 1}: phần I chỉ nhận A–D`);
       return;
@@ -68,11 +74,29 @@ export function parseKeys(text: string): { keys: Record<string, Key>; errors: st
 
     keys[code] = {
       p1: [...letters.slice(0, 10)],
-      p2: Array.from({ length: 5 }, (_, q) => letters.slice(10 + q * 6, 16 + q * 6)),
+      p2: Array.from({ length: 5 }, (_, q) =>
+        letters.slice(10 + q * perQuestion, 10 + (q + 1) * perQuestion),
+      ),
     };
   });
 
   return { keys, errors };
+}
+
+/**
+ * Flags that matter for this exam code. The printed form has 6 bubbles per
+ * PHẦN II question; when the exam only asks 4, the last two are always empty and
+ * would flag every single sheet as "cần xem".
+ */
+export function relevantFlags(record: SheetRecord, keys: Record<string, Key>): string[] {
+  const key = keys[record.examCode];
+  if (!key) return record.flags;
+  return record.flags.filter((flag) => {
+    const match = flag.match(/^cau(1[1-5])\.([A-F]):/);
+    if (!match) return true;
+    const question = Number(match[1]) - 11;
+    return match[2].charCodeAt(0) - 65 < key.p2[question].length;
+  });
 }
 
 /** Null when the sheet has no key for its exam code (or was rejected). */
@@ -87,10 +111,13 @@ export function score(record: SheetRecord, keys: Record<string, Key>, cfg: KeyCo
   let partTwo = 0;
   for (let q = 0; q < 5; q++) {
     const got = record.p2[String(q + 11)] ?? "";
+    // only the statements the exam actually has count; the extra bubbles on the
+    // printed form (6 are printed, a 4-statement question uses 4) are ignored
+    const wanted = key.p2[q].length;
     let matched = 0;
-    for (let i = 0; i < 6; i++) if (got[i] === key.p2[q][i]) matched++;
+    for (let i = 0; i < wanted; i++) if (got[i] === key.p2[q][i]) matched++;
     correctP2 += matched;
-    partTwo += cfg.mode === "all" ? (matched === 6 ? cfg.p2 : 0) : (cfg.p2 * matched) / 6;
+    partTwo += cfg.mode === "all" ? (matched === wanted ? cfg.p2 : 0) : (cfg.p2 * matched) / wanted;
   }
 
   const partOne = correctP1 * cfg.p1;

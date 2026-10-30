@@ -115,6 +115,8 @@ python3 tools/report.py --dir fixtures/sample-run -o /tmp/bao-cao.xlsx  # CI cũ
 8. **Điểm không nằm trong bản ghi.** `SheetRecord` chỉ có đáp án đã đọc; điểm tính lại từ
    `key.ts` mỗi lần xem/xuất. Sửa đáp án là mọi con số đổi theo, không có dữ liệu cũ lẫn vào.
    Đáp án + trọng số lưu ở localStorage `omr:key:v1`, file JSON xuất kèm `key` để tái lập được.
+   **Số ý phần II do đáp án quyết định** (4 hoặc 6): `score()` chỉ so các ý có trong đáp án, và
+   `relevantFlags()` bỏ cờ `blank` của các ô không có trong đề — nếu không, mọi phiếu đều bị cờ.
 9. **"Đã nhận" nghĩa là đã ghi xong**: `store.add()` chỉ resolve sau khi transaction commit.
    Đừng đổi thành ghi rồi trả về ngay, người dùng sẽ nhấc phiếu khi dữ liệu chưa xuống đĩa.
 10. **Hub không có đường đọc dữ liệu.** Chỉ `/api/health` trả số đếm; mọi endpoint khác là ghi

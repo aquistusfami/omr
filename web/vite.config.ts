@@ -11,6 +11,8 @@ export default defineConfig({
   // /omr/ on GitHub Pages, with no base-path flag
   base: "./",
   plugins: process.env.HTTP ? [] : [basicSsl()],
+  // iPhone 8 stops at iOS 16; transpile anything newer out of the bundle
+  build: { target: "safari15" },
   server: {
     host: true,
     https,

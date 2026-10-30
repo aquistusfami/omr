@@ -53,11 +53,17 @@ function done<T>(req: IDBRequest<T>): Promise<T> {
   });
 }
 
+/** crypto.randomUUID needs iOS 15.4+, so old iPhones get this instead. */
+function uid(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
 export async function add(record: SheetRecord, thumb?: Blob | null): Promise<SheetRecord> {
   const db = await open();
   const tx = db.transaction([SHEETS, THUMBS], "readwrite");
   const sheets = tx.objectStore(SHEETS);
-  let saved: SheetRecord = { uid: crypto.randomUUID(), ...record };
+  let saved: SheetRecord = { uid: uid(), ...record };
 
   // write only lands when the transaction commits; "received" must mean stored
   const count = sheets.index("studentId").count(record.studentId);

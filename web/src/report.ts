@@ -1,5 +1,5 @@
 import { tableData } from "./export";
-import { score, type Key, type KeyConfig } from "./key";
+import { relevantFlags, score, type Key, type KeyConfig } from "./key";
 import type { SheetRecord } from "./store";
 import type { Template } from "./types";
 import type { Sheet } from "./xlsx";
@@ -60,7 +60,7 @@ export function buildReport(
   const byCode: string[][] = codes.map((code) => {
     const ofCode = scored.filter((row) => row.record.examCode === code);
     const s = stats(ofCode.map((row) => row.result.total));
-    const flagged = rows.filter((r) => r.examCode === code && (r.flags.length || !r.ok)).length;
+    const flagged = rows.filter((r) => r.examCode === code && (relevantFlags(r, keys).length || !r.ok)).length;
     return [
       code,
       String(rows.filter((r) => r.examCode === code).length),
@@ -73,13 +73,13 @@ export function buildReport(
   if (!codes.length) byCode.push(["—", String(rows.length), "—", "—", "—", ""]);
 
   const doubtful: string[][] = rows
-    .filter((r) => !r.ok || r.flags.length || r.duplicate)
+    .filter((r) => !r.ok || relevantFlags(r, keys).length || r.duplicate)
     .map((r) => {
       const result = score(r, keys, cfg);
       const why = [
         r.ok ? "" : `REJECT:${r.reason ?? ""}`,
         r.duplicate ? "trùng mã SV" : "",
-        ...r.flags,
+        ...relevantFlags(r, keys),
       ]
         .filter(Boolean)
         .join(" ");

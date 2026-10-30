@@ -5,7 +5,7 @@ import { download, tableData, toCsv, toJson } from "./export";
 import { makeZip, encoder } from "./zip";
 import { gradeSheet, type GradeResult } from "./grade";
 import { fromRgba } from "./image";
-import { DEFAULT_KEY, parseKeys, score, type KeyConfig } from "./key";
+import { DEFAULT_KEY, parseKeys, relevantFlags, score, type KeyConfig } from "./key";
 import { Scanner } from "./scan";
 import * as store from "./store";
 import * as sync from "./sync";
@@ -46,6 +46,8 @@ let running = false;
 let busy = false;
 let generation = 0;
 let audio: AudioContext | null = null;
+/** last list from render(), so a tap can build a file without awaiting (Safari drops the gesture) */
+let cache: store.SheetRecord[] = [];
 let lastError = "";
 
 $("template-name").textContent = `${tmpl.name} · ${tmpl.blocks ? Object.keys(tmpl.blocks).length : 0} khối ô`;
@@ -387,9 +389,10 @@ async function handleFile(file: File): Promise<void> {
 
 async function render(): Promise<void> {
   const rows = await store.all();
+  cache = rows;
   const recentRows = rows.slice(-20).reverse();
   const bad = rows.filter((r) => !r.ok).length;
-  const flagged = rows.filter((r) => r.ok && r.flags.length).length;
+  const flagged = rows.filter((r) => r.ok && relevantFlags(r, keys).length).length;
   const dup = rows.filter((r) => r.duplicate).length;
   const hasKey = Object.keys(keys).length > 0;
   const scored = rows.map((r) => score(r, keys, keyCfg)).filter((s) => s !== null);
@@ -440,7 +443,7 @@ async function render(): Promise<void> {
                ...Object.entries(r.p2).map(([q, v]) => `${q}:${[...v].map((c) => (c === "?" ? "·" : c)).join("")}`)].join("  ")
             : "Chụp lại phiếu này"
         }</div>
-        ${r.ok && r.flags.length ? `<div class="flags">cần xem: ${r.flags.join(", ")}</div>` : ""}
+        ${r.ok && relevantFlags(r, keys).length ? `<div class="flags">cần xem: ${relevantFlags(r, keys).join(", ")}</div>` : ""}
         ${r.id ? `<button class="ghost remove" data-id="${r.id}">xoá</button>` : ""}`;
       row.querySelector(".remove")?.addEventListener("click", async (e) => {
         const id = Number((e.currentTarget as HTMLElement).dataset.id);
@@ -463,7 +466,7 @@ function stamp(): string {
  * the sheet thumbnails. Works with no network - share it or let it download.
  */
 async function exportPackage(): Promise<void> {
-  const rows = await store.all();
+  const rows = cache.length ? cache : await store.all();
   if (!rows.length) {
     statusEl.textContent = "Chưa có phiếu nào để xuất.";
     return;
@@ -498,7 +501,7 @@ async function exportPackage(): Promise<void> {
 }
 
 async function exportAs(kind: "csv" | "xlsx" | "json"): Promise<void> {
-  const rows = await store.all();
+  const rows = cache.length ? cache : await store.all();
   if (!rows.length) {
     statusEl.textContent = "Chưa có phiếu nào để xuất.";
     return;
