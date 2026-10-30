@@ -128,6 +128,14 @@ export function relevantFlags(record: SheetRecord, keys: Record<string, Key>): s
   });
 }
 
+/**
+ * Join one PHẦN II question's cells without losing their position: "" is a
+ * blank, "-" is not an answer (and never matches a key), "?" is two bubbles.
+ */
+export function joinStatements(values: string[]): string {
+  return values.map((v) => v || "-").join("");
+}
+
 /** Null when the sheet has no key for its exam code (or was rejected). */
 export function score(record: SheetRecord, keys: Record<string, Key>, cfg: KeyConfig): Score | null {
   const key = keys[record.examCode];

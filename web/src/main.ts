@@ -5,7 +5,7 @@ import { download, tableData, toCsv, toJson } from "./export";
 import { makeZip, encoder } from "./zip";
 import { gradeSheet, type GradeResult } from "./grade";
 import { fromRgba } from "./image";
-import { DEFAULT_KEY, parseKeys, relevantFlags, score, type KeyConfig } from "./key";
+import { DEFAULT_KEY, joinStatements, parseKeys, relevantFlags, score, type KeyConfig } from "./key";
 import { Scanner } from "./scan";
 import * as store from "./store";
 import * as sync from "./sync";
@@ -196,9 +196,9 @@ function toRecord(r: GradeResult) {
     examCode: r.examCode,
     p1: Object.fromEntries(Object.entries(r.p1).map(([q, u]) => [q, u.value])),
     p2: Object.fromEntries(
-      // keep "" for a blank: "?" means two bubbles filled and must stay
-      // distinguishable in the CSV
-      Object.entries(r.p2).map(([q, u]) => [q, u.values.join("")]),
+      // "-" keeps a blank in its position; "?" means two bubbles filled and
+      // must stay distinguishable in the CSV
+      Object.entries(r.p2).map(([q, u]) => [q, joinStatements(u.values)]),
     ),
     flags: r.flags,
     anchors: r.anchors,

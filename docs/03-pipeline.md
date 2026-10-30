@@ -93,10 +93,13 @@ Hai nhóm tách hẳn nhau, nên ngưỡng 20/12 nằm giữa khoảng trống.
 | Tình huống | Kết quả |
 |---|---|
 | Không thấy dấu / fit lệch | `ok=false`, `reason="anchors" \| "quality"` → chụp lại |
-| Ô trống | cờ `:blank`, giá trị `""` |
+| Ô trống | cờ `:blank`; câu phần I `""`, chuỗi phần II `-` để giữ vị trí |
 | Tô ≥2 ô | cờ `:multi`, **giá trị `?`** (câu đó luôn sai, phiếu vẫn có điểm) |
 | Có mực nhưng không phân biệt | cờ `:multi` (cùng nhánh, cũng thành `?`) |
 | Mã sinh viên trống ở một vị trí | hiện `?` trong CSV |
+
+Chuỗi phần II luôn đủ 6 vị trí: ô trống là `-`, tô đôi là `?`. Nếu nối chuỗi mà bỏ ô trống,
+các ý phía sau bị dịch sang trái và được so với sai vị trí trong đáp án.
 
 Cờ **không** chặn việc xuất CSV. Giáo viên xem cờ trước, sửa trong Excel (M2 sẽ cho sửa trong app).
 

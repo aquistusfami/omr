@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { DEFAULT_KEY, parseKeys, relevantFlags, score, type KeyConfig } from "../src/key";
+import { DEFAULT_KEY, joinStatements, parseKeys, relevantFlags, score, type KeyConfig } from "../src/key";
 import type { SheetRecord } from "../src/store";
 
 const KEY_TEXT = "501 ADCBBADDAC DSDSSS SDSDDS SDSDSD DSSDSS DDSDDS";
@@ -81,6 +81,18 @@ describe("score", () => {
   it("gives full marks for a perfect sheet", () => {
     const s = score(perfect, keys, cfg())!;
     expect(s).toMatchObject({ p1: 2.5, p2: 2.5, total: 5, correctP1: 10, correctP2: 30 });
+  });
+
+  it("keeps a blank statement in place instead of shifting the rest", () => {
+    expect(joinStatements(["", "S", "D", "S", "S", "S"])).toBe("-SDSSS");
+    const s = score(
+      sheet({ p1: "ADCBBADDAC", p2: ["-SDSSS", "SDSDDS", "SDSDSD", "DSSDSS", "DDSDDS"] }),
+      keys,
+      cfg(),
+    )!;
+    // q11 has 5 of 6 in the right place (so it scores nothing); the other
+    // four questions are perfect (4 x 6 statements)
+    expect(s.correctP2).toBe(29);
   });
 
   it("matches the school scale: 2 points per question, 30 in total, all or nothing", () => {
