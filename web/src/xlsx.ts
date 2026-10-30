@@ -40,7 +40,21 @@ function sheetXml(head: string[], body: string[][]): string {
   );
 }
 
-export function toXlsx(head: string[], body: string[][], sheetName = "Ket qua"): Blob {
+export interface Sheet {
+  name: string;
+  head: string[];
+  body: string[][];
+}
+
+/** One workbook, one sheet per entry. Excel/LibreOffice/Sheets all open it. */
+export function toWorkbook(sheets: Sheet[]): Blob {
+  if (!sheets.length) throw new Error("cần ít nhất một sheet");
+  const seen = new Set<string>();
+  for (const sheet of sheets) {
+    if (seen.has(sheet.name)) throw new Error(`trùng tên sheet: ${sheet.name}`);
+    seen.add(sheet.name);
+  }
+
   const files: Record<string, string> = {
     "[Content_Types].xml":
       `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` +
@@ -48,7 +62,12 @@ export function toXlsx(head: string[], body: string[][], sheetName = "Ket qua"):
       `<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>` +
       `<Default Extension="xml" ContentType="application/xml"/>` +
       `<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>` +
-      `<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>` +
+      sheets
+        .map(
+          (_, i) =>
+            `<Override PartName="/xl/worksheets/sheet${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`,
+        )
+        .join("") +
       `<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>` +
       `</Types>`,
     "_rels/.rels":
@@ -60,12 +79,21 @@ export function toXlsx(head: string[], body: string[][], sheetName = "Ket qua"):
       `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` +
       `<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" ` +
       `xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">` +
-      `<sheets><sheet name="${escapeXml(sheetName)}" sheetId="1" r:id="rId1"/></sheets></workbook>`,
+      `<sheets>` +
+      sheets
+        .map((sheet, i) => `<sheet name="${escapeXml(sheet.name)}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`)
+        .join("") +
+      `</sheets></workbook>`,
     "xl/_rels/workbook.xml.rels":
       `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` +
       `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">` +
-      `<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>` +
-      `<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>` +
+      sheets
+        .map(
+          (_, i) =>
+            `<Relationship Id="rId${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i + 1}.xml"/>`,
+        )
+        .join("") +
+      `<Relationship Id="rId${sheets.length + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>` +
       `</Relationships>`,
     "xl/styles.xml":
       `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` +
@@ -77,12 +105,18 @@ export function toXlsx(head: string[], body: string[][], sheetName = "Ket qua"):
       `<cellXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/></cellXfs>` +
       `<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>` +
       `</styleSheet>`,
-    "xl/worksheets/sheet1.xml": sheetXml(head, body),
   };
+  sheets.forEach((sheet, i) => {
+    files[`xl/worksheets/sheet${i + 1}.xml`] = sheetXml(sheet.head, sheet.body);
+  });
 
   const entries: ZipEntry[] = Object.entries(files).map(([name, text]) => ({
     name,
     data: encoder.encode(text),
   }));
   return makeZip(entries);
+}
+
+export function toXlsx(head: string[], body: string[][], sheetName = "Ket qua"): Blob {
+  return toWorkbook([{ name: sheetName, head, body }]);
 }

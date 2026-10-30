@@ -73,7 +73,9 @@ Mỗi phiếu ~8–10 giây.
    điểm, theo mã đề, nghi vấn kèm đường dẫn ảnh). Không cần bước xuất file trên điện thoại.
    Sau khi đã có báo cáo, bấm **Xoá hết** trên điện thoại nếu không cần giữ bản phụ.
 
-1. Xuất lần cuối trên điện thoại — chỉ cần khi **không** dùng hub. Chọn định dạng:
+1. Xuất lần cuối trên điện thoại — chỉ cần khi **không** dùng hub. Nút **Báo cáo** cho file Excel
+   đủ 4 sheet (danh sách, phổ điểm, theo mã đề, nghi vấn) — mở trên máy tính là xong, không cần
+   Python. Còn nếu cần dữ liệu thô:
    - **CSV**: mở bằng Excel/Google Sheets, mỗi phiếu một dòng.
    - **Excel** (.xlsx): mở thẳng, không cần import, giữ nguyên số 0 đầu của mã sinh viên.
    - Cột `thoi_gian` ghi theo **giờ của điện thoại** (không phải UTC), dạng `2026-05-16 10:31:05`.

@@ -10,7 +10,8 @@ import { Scanner } from "./scan";
 import * as store from "./store";
 import * as sync from "./sync";
 import type { Template } from "./types";
-import { toXlsx } from "./xlsx";
+import { buildReport } from "./report";
+import { toWorkbook } from "./xlsx";
 
 const tmpl = templateJson as unknown as Template;
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -506,7 +507,7 @@ async function exportAs(kind: "csv" | "xlsx" | "json"): Promise<void> {
   const table = tableData(rows, tmpl, scoring);
   if (kind === "csv") download(`ket-qua-${stamp()}.csv`, toCsv(table));
   if (kind === "json") download(`ket-qua-${stamp()}.json`, toJson(rows, tmpl, scoring));
-  if (kind === "xlsx") download(`ket-qua-${stamp()}.xlsx`, toXlsx(table.head, table.body));
+  if (kind === "xlsx") download(`bao-cao-${stamp()}.xlsx`, toWorkbook(buildReport(rows, tmpl, keys, keyCfg)));
 }
 
 /* ------------------------------------------------------------------ wires */

@@ -70,7 +70,8 @@ Cập nhật 2026-10-24. Chi tiết và tiêu chí nghiệm thu: [docs/06-roadma
 | Chụp thủ công (input file) khi không có camera | ✅ |
 | Lưu IndexedDB: kết quả + ảnh phiếu 900 px | ✅ |
 | Hub nội bộ: điện thoại gửi phiếu về máy tính qua LAN (token + https) | ✅ code + test, xem [docs/07](docs/07-may-tinh.md) |
-| `tools/report.py`: Excel 4 sheet (danh sách, phổ điểm, theo mã đề, nghi vấn) | ✅ |
+| Báo cáo 4 sheet (danh sách, phổ điểm, theo mã đề, nghi vấn) **ngay trên điện thoại** | ✅ nút "Báo cáo" |
+| `tools/report.py`: cùng báo cáo đó từ dữ liệu thô / gói .zip | ✅ |
 | Xuất CSV / Excel (.xlsx) / JSON | ✅ |
 | Thiết kế lại giao diện (máy đo, 2 theme, dải trạng thái, gợi ý căn máy trong khung ngắm) | ✅ đã dựng ở 320/360/390 px + ngang, cả 2 theme |
 | CI: type check, test, build, template, mở file xlsx | ✅ |
@@ -137,6 +138,10 @@ cd web && npm run build && npm run hub     # in ra link https://<ip>:8443/?t=...
 # mở link đó trên điện thoại, rồi trên máy tính:
 python3 tools/report.py                    # data/omr/bao-cao.xlsx
 ```
+
+Không nối được điện thoại với máy tính thì **không cần hub**: chấm xong bấm **Báo cáo** trên
+điện thoại, file Excel 4 sheet tải về (hoặc chia sẻ qua Zalo/Drive/AirDrop), máy tính chỉ việc mở.
+Nút **Gói .zip** để lưu thô kèm ảnh phiếu.
 
 Chi tiết, cơ chế đồng bộ và **những gì được/không được bảo vệ**: [docs/07-may-tinh.md](docs/07-may-tinh.md).
 Điện thoại không mở được link thì kiểm tra theo thứ tự: **dán link vào Chrome/Safari** (trình

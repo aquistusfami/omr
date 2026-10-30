@@ -80,7 +80,8 @@ python3 tools/report.py --dir fixtures/sample-run -o /tmp/bao-cao.xlsx  # CI cũ
 | `web/src/capture.ts` | getUserMedia, lấy khung hình, ảnh thu nhỏ |
 | `web/src/store.ts` | IndexedDB: `sheets` + `thumbs` (ảnh tách riêng) |
 | `web/src/export.ts` | bảng dùng chung cho CSV/XLSX, JSON |
-| `web/src/xlsx.ts` | ghi .xlsx tối giản (zip không nén), không dependency |
+| `web/src/xlsx.ts` | ghi .xlsx tối giản (zip không nén), nhiều sheet, không dependency |
+| `web/src/report.ts` | dựng 4 sheet báo cáo từ bản ghi + đáp án (chạy trên điện thoại) |
 | `web/src/sync.ts` | gửi phiếu + đáp án lên hub (token, hàng đợi, thử lại) |
 | `web/src/main.ts` | UI: hai chế độ, banner, bíp, danh sách, xuất file |
 | `web/tools/hub.mjs` | máy chủ LAN: phục vụ app, nhận phiếu/đáp án, ghi `data/omr/` |

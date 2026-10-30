@@ -119,7 +119,8 @@ File Excel có 4 sheet:
 | `Theo ma de` | số phiếu, điểm TB, cao/thấp nhất, số ô cần xem cho mỗi mã đề |
 | `Nghi van` | phiếu bị từ chối / có cờ / trùng mã SV, kèm đường dẫn ảnh `thumbs/<uid>.jpg` |
 
-Điểm **không được lưu** trong dữ liệu; `report.py` tính lại từ `key.json` mỗi lần chạy.
+Điểm **không được lưu** trong dữ liệu; cả nút Báo cáo lẫn `report.py` đều tính lại từ đáp án
+đang nhập, mỗi lần chạy.
 Sửa đáp án rồi chạy lại là toàn bộ điểm đổi theo.
 
 ## 6. Bảo mật: được gì và không được gì
