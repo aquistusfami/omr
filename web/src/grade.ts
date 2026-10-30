@@ -179,7 +179,9 @@ export function gradeSheet(
         const unit = classifyColumn(
           rows.map((row, digit) => ({ label: s.labels[digit], value: row[pos] })),
         );
-        text += unit.value || "?";
+        // an over-marked digit is a guess: show "?" so it is visible instead of
+        // scoring the sheet against a wrong exam code
+        text += unit.flag === "multi" ? "?" : unit.value || "?";
         note(`${s.id}[${pos + 1}]`, unit);
       }
       if (s.id === "student_id") result.studentId = text;
@@ -191,7 +193,7 @@ export function gradeSheet(
       for (const q of s.questions) {
         const row = values[q.block][q.row];
         const unit = classify(s.choices.map((label, i) => ({ label, value: row[i] })));
-        result.p1[String(q.q)] = unit;
+        result.p1[String(q.q)] = unit.flag === "multi" ? { ...unit, value: "?" } : unit;
         note(`cau${q.q}`, unit);
         if (q.row >= tmpl.blocks[q.block].rows) throw new Error(`row out of range for ${q.block}`);
       }
@@ -210,7 +212,9 @@ export function gradeSheet(
             { label: s.labels[1], value: rows[r][q.col + 1] },
           ];
           const unit = classify(pair);
-          values2.push(unit.value);
+          // two bubbles filled: no way to know which one the student meant, so
+          // the answer is wrong instead of silently taking the darker one
+          values2.push(unit.flag === "multi" ? "?" : unit.value);
           flags.push(unit.flag);
           worst = Math.min(worst, unit.confidence);
           note(`cau${q.q}.${String.fromCharCode(65 + r)}`, unit);

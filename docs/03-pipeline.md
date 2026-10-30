@@ -94,11 +94,20 @@ Hai nhóm tách hẳn nhau, nên ngưỡng 20/12 nằm giữa khoảng trống.
 |---|---|
 | Không thấy dấu / fit lệch | `ok=false`, `reason="anchors" \| "quality"` → chụp lại |
 | Ô trống | cờ `:blank`, giá trị `""` |
-| Tô ≥2 ô | cờ `:multi` |
-| Có mực nhưng không phân biệt | cờ `:multi` (cùng nhánh) |
+| Tô ≥2 ô | cờ `:multi`, **giá trị `?`** (câu đó luôn sai, phiếu vẫn có điểm) |
+| Có mực nhưng không phân biệt | cờ `:multi` (cùng nhánh, cũng thành `?`) |
 | Mã sinh viên trống ở một vị trí | hiện `?` trong CSV |
 
 Cờ **không** chặn việc xuất CSV. Giáo viên xem cờ trước, sửa trong Excel (M2 sẽ cho sửa trong app).
+
+**Vì sao `multi` phải thành `?`:** trước đây ô đậm hơn trong hai ô được tô được lấy làm đáp án, nên
+một câu tô đôi vẫn có thể "đúng" do may mắn. Tệ hơn, tô đôi ở **mã đề** đọc ra một mã khác → không có
+trong bảng đáp án → **cả phiếu không có điểm**, dù bài làm đúng hết. Từ bản sửa "tô thừa = câu sai",
+mọi ô `multi` đều trả `?`: câu đó chắc chắn sai, phiếu vẫn được chấm.
+
+Đánh đổi: mã đề/mã SV bị tô đôi vẫn ra `?` (không đoán bừa) nên phiếu đó vẫn chưa tính điểm — nhưng
+nó hiện `—` kèm cờ `exam_code[n]:multi` để giáo viên biết phải xem, thay vì lặng lẽ chấm theo một mã
+đoán sai.
 
 ## 7. Chỉnh ngưỡng
 
